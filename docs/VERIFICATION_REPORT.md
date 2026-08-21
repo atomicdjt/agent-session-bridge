@@ -5,37 +5,41 @@
 * **Version:** `1.1.17`
 * **Operating System:** Windows
 * **Python Version:** 3.14.7
-* **Filesystem Roots:** 
-  * App Data: `~/.gemini/antigravity/`
-  * CLI cache: `~/.gemini/antigravity/conversations/`
-  * Transcripts: `~/.gemini/antigravity/brain/<uuid>/.system_generated/logs/`
+* **Observed filesystem roots:**
+  * App data: `~/.gemini/antigravity/`
+  * Conversation databases: `~/.gemini/antigravity/conversations/`
+  * Derived transcripts: `~/.gemini/antigravity/brain/<uuid>/.system_generated/logs/`
 
 ## 2. Methodology & Ablation Results
-I performed controlled ablation experiments to determine Antigravity's true persistence behavior. 
+I performed controlled ablation experiments to characterize persistence behavior observed in Antigravity CLI 1.1.17 on Windows.
+
 1. **Experiment A (transcript JSONL only):** Created `transcript.jsonl` in a fresh UUID directory.
-   *Result:* `agy --conversation <uuid>` exited with `warning: conversation not found`. **Failed.**
-2. **Experiment B (SQLite DB Inspection):** Used Python's `sqlite3` module to dump the schema of a newly generated `conversations/<uuid>.db`.
-   *Result:* Discovered tables (`trajectory_meta`, `steps`, `gen_metadata`, etc.) heavily relying on proprietary binary blobs.
-3. **Experiment C (SQLite Copied UUID):** Copied a valid SQLite DB to a new UUID filename and attempted resumption.
-   *Result:* `agy` exited with `Error: trajectory not found`.
+   *Result:* `agy --conversation <uuid>` returned `warning: conversation not found`. **Failed.**
+2. **Experiment B (SQLite DB inspection):** Used Python's `sqlite3` module to inspect the schema of a newly generated `conversations/<uuid>.db`.
+   *Result:* Observed tables including `trajectory_meta`, `steps`, and `gen_metadata`, with opaque/BLOB-encoded fields whose external creation contract is undocumented.
+3. **Experiment C (SQLite copied UUID):** Copied a valid SQLite DB to a new UUID filename and attempted resumption.
+   *Result:* `agy` returned `Error: trajectory not found`. **Failed.**
 
-**Finding:** The authoritative state is exclusively managed via proprietary, blob-based SQLite databases in `conversations/`. The `transcript.jsonl` files are strictly derived logging, not authoritative input.
+**Finding:** In this environment, a derived `transcript.jsonl` file alone is not accepted as resumable conversation state. Resumable conversations were observed to depend on Antigravity-managed SQLite persistence under `conversations/`, with additional invariants not documented as a supported external creation interface. These experiments do not claim to exhaustively characterize Antigravity's internal architecture.
 
-## 3. Field-Level Fidelity (Claude Code -> ASEF -> Antigravity JSONL)
-* **Survives Exactly:** Turn roles, ISO-8601 timestamps, plain text content, tool names, tool arguments.
-* **Normalized:** Claude's `parentUuid` chains are flattened into a chronological array. Tool results attached to `user` messages in Claude are correctly un-nested and serialized as standalone `SYSTEM` `TOOL_RESPONSE` events for Antigravity.
-* **Degraded / Omitted:** Raw token metrics. Unrecognized event types in Claude JSONL are dropped and tallied in `loss_report.unsupported_events`.
-* **Synthesized:** `step_index` and generic statuses (e.g. `DONE`) are synthesized to fulfill Antigravity export requirements.
+## 3. Field-Level Fidelity (Claude Code -> ASEF -> Antigravity derived-log JSONL)
+* **Preserved in tested fixtures:** Turn roles, ISO-8601 timestamps, plain text content, tool names, and tool arguments.
+* **Normalized:** Claude `parentUuid` chains are flattened into a chronological array. Tool results attached to `user` messages are normalized into standalone tool-response events in the derived-log mapping.
+* **Degraded / Omitted:** Raw token metrics. Unrecognized event types are omitted from the canonical mapping and counted in `loss_report.unsupported_events`.
+* **Synthesized:** `step_index` and generic statuses such as `DONE` are generated for the Antigravity derived-log representation.
+
+This mapping is a reference transformation to observed derived-log structures; it is not a native Antigravity ingestion format.
 
 ## 4. Parser Resilience
-* **Malformed JSON / Truncated Lines:** Caught via standard `JSONDecodeError`, explicitly logged to the Loss Report.
-* **Credential Leakage:** Caught via the `redact_session` heuristics step which scrubbed `api_key` values in real fixtures.
-* **Huge Records:** Bound by available RAM, as Python's `json.loads` processes each line entirely in memory.
+* **Malformed JSON / truncated lines:** Caught via `JSONDecodeError` and reported through loss accounting.
+* **Credential redaction:** The `redact_session` heuristic successfully scrubbed an intentionally synthetic `api_key` value from the public test fixture.
+* **Huge records:** Each JSONL record is parsed as a complete line, so maximum record size remains bounded by available memory.
 
 ## 5. Corrected Conclusions
-* **FALSE CLAIM:** *Native handoff is achievable by generating `transcript.jsonl`.* This was definitively disproven. Antigravity ignores these logs for resumption.
-* **FALSE CLAIM:** *Implementation is production-ready.* It cannot be production-ready for Antigravity without a supported upstream CLI endpoint (`import-session`).
+* **Disproved:** Generating `transcript.jsonl` is sufficient for native handoff. The tested CLI did not resume from the synthetic log-only state.
+* **Not established:** Production-ready Claude Code -> Antigravity native handoff. No supported external historical-session ingestion boundary was identified.
 
 ## 6. Final Readiness Classification
 **RFC READY**
-The codebase translates Claude structures faithfully with robust loss-accounting and redaction. However, the lack of an `agy import-session` endpoint or documented SQLite schema makes native ingestion completely impossible without violating security rules. The project serves solely as the specification and payload generator for the proposed upstream RFC.
+
+The codebase provides a tested Claude Code -> ASEF canonicalization pipeline with explicit loss accounting, redaction, and a reference mapping to observed Antigravity derived-log structures. Native Antigravity ingestion is intentionally not implemented because no supported external creation/import interface was identified in the tested CLI. The repository therefore serves as a reference implementation, verification artifact, and proposed upstream API contract rather than a completed native handoff system.
