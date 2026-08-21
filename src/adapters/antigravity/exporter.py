@@ -1,8 +1,10 @@
 import json
+
 from canonical.models import ASEFSession, MessageRole
 
+
 def export_to_antigravity(session: ASEFSession) -> str:
-    transcript_lines = []
+    transcript_lines: list[str] = []
     
     for idx, turn in enumerate(session.turns, 1):
         if turn.role == MessageRole.USER:

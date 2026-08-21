@@ -9,3 +9,5 @@ build/
 dist/
 *.sqlite
 *.db
+.qa-venv/
+test-venv/

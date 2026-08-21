@@ -8,18 +8,20 @@ I built and adversarially tested a reference implementation for the external sid
 * A canonical, versioned Agent Session Exchange Format (ASEF) using strict Pydantic schemas.
 * A Claude Code importer with explicit preservation/loss accounting (flattening nested tool schemas, extracting user-role tool results safely).
 * Security redaction (regex heuristics for credentials).
-* An exporter that maps canonical turns to Antigravity's derived log format (`USER_EXPLICIT`, `PLANNER_RESPONSE`, `TOOL_RESPONSE`).
+* An exporter that maps canonical turns to Antigravity's observed derived-log format (`USER_EXPLICIT`, `PLANNER_RESPONSE`, `TOOL_RESPONSE`).
 
 **Important verification result:**
-During validation, I discovered through ablation testing that placing a `transcript.jsonl` into the `.system_generated/logs` directory is ignored by the CLI on resumption (`agy --conversation`). The true native CLI state currently resides entirely within the internal SQLite persistence mechanism (`~/.gemini/antigravity/conversations/`), which utilizes undocumented binary schemas. To respect the tool's engineering boundaries, this reference implementation intentionally does not attempt to mutate or reverse-engineer these SQLite databases.
+During adversarial validation, I discovered through ablation testing that placing a `transcript.jsonl` into the `.system_generated/logs` directory is ignored by `agy --conversation` on resumption. The authoritative native CLI state resides entirely within Antigravity's internal SQLite persistence mechanism (`~/.gemini/antigravity/conversations/`), which uses an undocumented schema containing opaque/BLOB-encoded fields. To respect the tool's engineering boundaries, this reference implementation intentionally does not attempt to mutate or reverse-engineer these databases.
 
 **Missing primitive:**
-The remaining requirement appears to be a supported Antigravity-side ingestion boundary capable of accepting validated external historical logs (e.g., JSONL) and safely reconstructing them into the SQLite backend, returning a resumable conversation ID. 
+The remaining requirement appears to be a supported Antigravity-side ingestion boundary capable of accepting validated external historical logs and safely constructing the internal representation, returning a resumable conversation ID.
 
-*(Note: My testing confirms that the current `--input-format stream-json` solves programmatic injection of live/future turns, but does not reconstruct pre-existing historical assistant/tool state as authoritative native history.)*
+*(Note: Testing on `agy` v1.1.17 confirms that `--input-format stream-json` drives programmatic injection of live/future turns, but does not reconstruct pre-existing historical assistant/tool state as authoritative native history. Session migration therefore remains a distinct capability.)*
 
-I've written up the findings, reproduction steps, and a proposed `agy import-session` RFC here:
-* **Repository & RFC:** [Link to Repository]
-* **Verification & Ablation Report:** [Link to VERIFICATION_REPORT.md]
+I've written up the findings, reproduction steps, and a proposed `agy import-session` RFC:
+* **Repository:** https://github.com/atomicdjt/agent-session-bridge
+* **Integration RFC:** https://github.com/atomicdjt/agent-session-bridge/blob/main/docs/ANTIGRAVITY_INTEGRATION.md
+* **Verification & Ablation Report:** https://github.com/atomicdjt/agent-session-bridge/blob/main/docs/VERIFICATION_REPORT.md
+* **Independent Reproduction Guide:** https://github.com/atomicdjt/agent-session-bridge/blob/main/docs/EXPERIMENT_REPRO.md
 
 Feedback or technical corrections on the integration boundary proposal are welcome.

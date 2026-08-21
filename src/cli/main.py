@@ -1,9 +1,10 @@
 import argparse
 import sys
-from adapters.claude.parser import parse_claude_jsonl
+
 from adapters.antigravity.exporter import export_to_antigravity
-from canonical.models import ASEFSession
+from adapters.claude.parser import parse_claude_jsonl
 from security.redact import redact_session
+
 
 def import_session(args):
     with open(args.source, 'r', encoding='utf-8') as f:
