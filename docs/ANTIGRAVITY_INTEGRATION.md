@@ -1,10 +1,12 @@
 # Antigravity Integration RFC
 
 ## Motivation
-Developers frequently switch between agentic environments (e.g., Claude Code to Antigravity) during complex tasks. While agent-session-bridge demonstrates high-fidelity extraction of session history into a canonical format (ASEF) and maps it to Antigravity's `transcript.jsonl` structure, native resumption is currently blocked. Antigravity's `--conversation` flag relies on an undocumented internal SQLite schema containing opaque/BLOB-encoded fields, and dropping a derived log file into `.system_generated` is ignored.
+Developers frequently switch between agentic coding environments during complex tasks. Agent Session Bridge demonstrates high-fidelity extraction of tested Claude Code session history into a canonical representation (ASEF) and maps that state to Antigravity's observed derived `transcript.jsonl` log structure.
+
+Testing with Antigravity CLI 1.1.17 on Windows found that a synthesized derived log alone is not accepted by `agy --conversation` as resumable history. Normal CLI-created conversations were observed to use Antigravity-managed SQLite persistence under `~/.gemini/antigravity/conversations/`, including opaque/BLOB-encoded fields and invariants that are not documented as a supported external creation contract. This RFC therefore proposes a supported ingestion boundary rather than attempting to reproduce internal persistence externally.
 
 ## Proposed Upstream Capability
-We propose adding an explicit `import-session` boundary to the `agy` CLI to deserialize structured JSONL histories securely into the SQLite representation.
+Add an explicit historical-session import boundary to `agy` that accepts validated external session data and returns a normal resumable conversation ID. The implementation of Antigravity's internal persistence remains entirely behind the CLI/runtime boundary.
 
 ### Proposed Interface
 ```bash
@@ -14,21 +16,33 @@ agy import-session \
   [--dry-run]
 ```
 
-### Output Behavior
+### Example Output
 ```json
 {
   "conversation_id": "new-uuid-1234",
   "status": "imported",
-  "warnings": [
-    "Unrecognized tool execution dropped"
-  ]
+  "warnings": []
 }
 ```
 
-### Security Boundaries
-* The CLI must validate all inbound historical structures.
-* Historical tool outputs must never be re-executed during ingestion.
-* The ingestion must occur within the boundary of the `agy` runtime, ensuring internal DB migrations and binary blob creation are managed by the official system, rather than via external mutations.
+For incomplete or unsupported input, the command should report preservation/loss explicitly. For handoff use cases, fail-closed behavior is preferable when required history cannot be represented faithfully.
 
-## Why `--input-format stream-json` is Insufficient
-Testing confirms that `--input-format stream-json` is designed to drive the live loop (taking stdin inputs and processing them as new future turns). It does not allow for reconstructing arbitrary historical state (such as past assistant text and matched tool responses) as an authoritative native history. Session migration remains a distinct capability requiring a dedicated ingestion path.
+### Suggested Contract
+* Validate all inbound historical structures before creating a conversation.
+* Preserve visible user/assistant history and supported tool/result records where possible.
+* Preserve or explicitly report workspace/project association.
+* Mark imported provenance so hosts can distinguish imported from native-origin history.
+* Treat historical tool calls as records; never re-execute them during ingestion.
+* Return a stable conversation ID usable by the normal `agy --conversation <id>` path.
+* Report skipped, unsupported, redacted, or degraded records explicitly.
+* Keep all internal persistence creation/migration inside the supported Antigravity runtime boundary.
+
+## Why `--input-format stream-json` Does Not Replace Historical Import
+Testing on `agy` 1.1.17 found that `--input-format stream-json` can drive new/live turns programmatically. It did not provide a mechanism for reconstructing externally generated prior assistant responses and tool/result history as imported native history. Historical session migration therefore remains a distinct capability in the tested version.
+
+## Reference Implementation
+Agent Session Bridge provides the external-side reference pipeline for this proposal:
+
+`Claude Code JSONL -> ASEF -> validation/loss accounting -> Antigravity derived-log mapping`
+
+The project intentionally stops at the unsupported native-ingestion boundary. The derived-log mapping is evidence and interoperability tooling, not a claim that `transcript.jsonl` is an official import format.
