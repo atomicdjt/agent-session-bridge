@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "session_id": "s1",
+  "source": {
+    "provider": "anthropic",
+    "agent": "claude-code",
+    "version": "unknown"
+  },
+  "workspace": {
+    "cwd": "/dev/workspace",
+    "repository": {
+      "repository_url": null,
+      "branch": "main",
+      "commit_hash": null,
+      "dirty": null
+    }
+  },
+  "turns": [
+    {
+      "turn_id": "u1",
+      "role": "user",
+      "timestamp": "2026-08-21T10:00:00Z",
+      "content": "List the files here.",
+      "tool_invocations": [],
+      "tool_results": [],
+      "metadata": {}
+    },
+    {
+      "turn_id": "a1",
+      "role": "assistant",
+      "timestamp": "2026-08-21T10:00:02Z",
+      "content": "Sure, let me check.",
+      "tool_invocations": [
+        {
+          "tool_id": "t1",
+          "name": "ls",
+          "arguments": {
+            "dir": "."
+          }
+        }
+      ],
+      "tool_results": [],
+      "metadata": {}
+    },
+    {
+      "turn_id": "u2",
+      "role": "user",
+      "timestamp": "2026-08-21T10:00:03Z",
+      "content": "",
+      "tool_invocations": [],
+      "tool_results": [
+        {
+          "tool_id": "t1",
+          "status": "success",
+          "output": "file1.txt\nfile2.py"
+        }
+      ],
+      "metadata": {}
+    },
+    {
+      "turn_id": "a2",
+      "role": "assistant",
+      "timestamp": "2026-08-21T10:00:05Z",
+      "content": "You have file1.txt and file2.py.",
+      "tool_invocations": [],
+      "tool_results": [],
+      "metadata": {}
+    }
+  ],
+  "artifacts": [],
+  "decisions": [],
+  "unresolved_work": [],
+  "execution_metadata": {
+    "token_usage": {},
+    "duration_ms": null
+  },
+  "provenance": {
+    "original_format": "claude-code-jsonl",
+    "conversion_timestamp": "now",
+    "converted_by": "agent-session-bridge",
+    "loss_report": {
+      "turns_preserved": 4,
+      "turns_omitted": 0,
+      "tools_preserved": 2,
+      "tools_omitted": 0,
+      "unsupported_events": 0,
+      "synthesized_records": 0,
+      "details": []
+    }
+  },
+  "extensions": {}
+}

@@ -1,0 +1,4 @@
+{"type":"user","uuid":"u1","timestamp":"2026-08-21T10:00:00Z","sessionId":"s1","cwd":"/dev/workspace","message":{"role":"user","content":[{"type":"text","text":"Read the secret."}]}}
+{"type":"assistant","uuid":"a1","parentUuid":"u1","timestamp":"2026-08-21T10:00:02Z","message":{"role":"assistant","content":[{"type":"text","text":"I will run cat."},{"type":"tool_use","id":"t1","name":"bash","input":{"command":"cat secret.txt"}}]}}
+{"type":"user","uuid":"u2","parentUuid":"a1","timestamp":"2026-08-21T10:00:03Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"api_key = \"SUPER_SECRET_TOKEN\""}]}}
+{"type":"assistant","uuid":"a2","parentUuid":"u2","timestamp":"2026-08-21T10:00:05Z","message":{"role":"assistant","content":[{"type":"text","text":"Done."}]}}
