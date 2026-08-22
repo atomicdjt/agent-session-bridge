@@ -1,52 +1,149 @@
 # Agent Session Bridge
 
-Agent Session Bridge is a reference implementation for normalizing coding-agent session history into a versioned provider-neutral representation. It initially targets Claude Code JSONL import and explores the missing ingestion boundary required for resumable Antigravity session import.
+**Move structured coding-agent history between tools without collapsing everything into a prose summary.**
+
+Agent Session Bridge is an MIT-licensed reference implementation for normalizing coding-agent session history into the **Agent Session Exchange Format (ASEF)**, with explicit fidelity/loss accounting and provider adapters.
+
+> **Current status:** Claude Code JSONL import, ASEF normalization, heuristic secret redaction, loss reporting, and Antigravity derived-log export work today. Native Antigravity session rehydration is **not** currently supported because Antigravity does not expose a safe external session-import boundary.
+
+## Why this exists
+
+Coding agents can accumulate hours of structured state: messages, tool calls, tool results, timestamps, and execution context. Switching tools usually reduces that history to a hand-written or model-generated summary.
+
+Agent Session Bridge explores a stricter question:
+
+> **What coding-agent state can be transferred faithfully, what must be normalized, and what is inevitably lost?**
+
+The project records those boundaries instead of pretending every provider has the same session model.
 
 ## What works today
-* **Canonical Interchange Format (ASEF):** Models provider-neutral conversation history, tracking user interactions, agent responses, and tool executions.
-* **Claude Code Import:** Parses Claude Code JSONL into ASEF with high semantic fidelity, correctly flattening nested schemas and accurately modeling tool results.
-* **Secret Redaction:** Provides a regex-based heuristic layer to redact credentials (e.g., API keys) from raw tool output.
-* **Antigravity Derived-Log Mapping:** Translates ASEF into the `transcript.jsonl` log structure emitted by the Antigravity CLI.
 
-## What does not work today
-* **Native Antigravity Ingestion:** The Antigravity CLI relies on an undocumented internal SQLite conversation schema containing opaque/BLOB-encoded fields. There is no supported `agy import-session` command to securely reconstruct a session database from external logs. Dropping `transcript.jsonl` into the logs folder is ignored by the CLI on resumption. Thus, this project cannot natively inject a session; it serves as a reference implementation and payload generator proposing an upstream ingestion boundary.
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Claude Code JSONL import | ✅ | Parses supported message/tool structures into ASEF |
+| Provider-neutral ASEF model | ✅ | Pydantic-validated, chronologically normalized representation |
+| Fidelity/loss reporting | ✅ | Records unsupported/degraded structures rather than silently dropping them |
+| Heuristic secret redaction | ✅ | Best-effort credential filtering; output still requires human review |
+| Antigravity derived-log mapping | ✅ | Produces the documented `transcript.jsonl`-style target payload |
+| Native Antigravity session import | ❌ blocked upstream | No supported API exists to reconstruct/resume external historical state |
 
-## Motivation
-A developer should be able to begin substantial work in one coding agent and transfer the structured state to another, avoiding the severe information loss of a summary-and-reprompt workflow. This project aims to demonstrate how this can be achieved safely across platforms.
+## Quick start
 
-## Architecture
-The project follows a standard Extract-Transform-Load (ETL) adapter pattern:
-1. **Parser:** Extracts provider-specific transcripts (e.g., Claude Code JSONL).
-2. **Canonical Model:** Validates the data into the Agent Session Exchange Format (ASEF) using Pydantic, enforcing chronological normalization.
-3. **Redaction:** Scrubs detected PII/secrets.
-4. **Exporter:** Maps the ASEF schema to the target's derived-log structure (e.g., Antigravity `transcript.jsonl`).
+### Install from this repository
 
-## Quick Start
+This project is **not currently published on PyPI**. The PyPI distribution name `agent-session-bridge` is already used by an unrelated project, so **do not run `pip install agent-session-bridge` expecting this repository**.
+
 ```bash
-pip install agent-session-bridge
+git clone https://github.com/atomicdjt/agent-session-bridge.git
+cd agent-session-bridge
+python -m venv .venv
+```
+
+Activate the environment:
+
+```bash
+# Linux/macOS
+source .venv/bin/activate
+
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+```
+
+Install the project:
+
+```bash
+python -m pip install -e .
+```
+
+Then inspect or convert a Claude Code transcript:
+
+```bash
 agent-session import --from claude-code --source your_claude_log.jsonl --report
 agent-session convert --from claude-code --to antigravity your_claude_log.jsonl
 agent-session handoff --from claude-code --to antigravity your_claude_log.jsonl
 ```
-*(Note: `handoff` currently returns `UnsupportedNativeImport` and prints the payload, as native injection is blocked by upstream API limitations.)*
 
-## Fidelity Model
+`handoff` currently returns `UnsupportedNativeImport` after producing the payload because native Antigravity history injection is blocked by the missing upstream import API.
+
+## Architecture
+
+```text
+provider transcript
+       │
+       ▼
+ source adapter
+       │
+       ▼
+      ASEF ─────► loss report
+       │
+       ├────────► redacted portable representation
+       │
+       ▼
+ target adapter
+       │
+       ▼
+ target payload / supported importer
+```
+
+The implementation follows an extract-transform-export adapter model:
+
+1. **Parser** — extracts provider-specific transcript structures.
+2. **Canonical model** — validates and normalizes them into ASEF.
+3. **Loss accounting** — records unsupported or degraded source information.
+4. **Redaction** — applies best-effort secret/PII heuristics.
+5. **Exporter** — maps ASEF into the target provider's supported representation.
+
+## Fidelity model
+
 When translating Claude Code to ASEF:
-* **Preserved:** Roles, ISO-8601 timestamps, plain text content, tool names, tool arguments.
-* **Normalized:** `parentUuid` chains flattened to chronological lists; Claude user-role tool results mapped to standalone system tool results.
-* **Degraded/Omitted:** Token metadata, undocumented proprietary UI states.
-* **Unsupported:** Any unknown provider-specific block types are tallied in the Loss Report.
 
-## Antigravity Integration Status
-Currently **RFC Ready**. The project successfully maps external history to the derived log schema used by Antigravity, but native insertion into the CLI's SQLite store requires a supported API. The use of `agy --input-format stream-json` does not solve this problem, as it is designed for forward-feeding live turns rather than reconstructing historical assistant state.
+- **Preserved:** roles, ISO-8601 timestamps, plain text, tool names, tool arguments, supported tool results.
+- **Normalized:** `parentUuid` chains are flattened into chronological ordering; provider-specific tool-result placement is mapped into canonical tool-result records.
+- **Degraded/omitted:** provider metadata that has no stable target-independent meaning, including undocumented UI state and token metadata.
+- **Unsupported:** unknown provider-specific block types are counted in the loss report instead of being silently treated as preserved.
 
-## Security
-* This tool processes untrusted input as data. It does not execute imported historical commands.
-* Redaction heuristically removes secrets, though it should not be relied upon exclusively. Always verify output before publishing.
-* No internal Antigravity databases are dangerously mutated or reverse-engineered.
+The design principle is simple: **portability claims must be inspectable.**
+
+## Antigravity integration boundary
+
+The project can map ASEF into the derived `transcript.jsonl` structure emitted by Antigravity, but native resumption remains blocked.
+
+Current Antigravity behavior relies on an internal SQLite conversation store with undocumented/opaque fields, and there is no supported `agy import-session` equivalent. Dropping a derived transcript into Antigravity's logs directory does not reconstruct a resumable historical session.
+
+The project therefore does **not** mutate Antigravity's internal database or claim a working native handoff where none exists. It provides the reference payload and an integration RFC for a safer upstream ingestion boundary.
+
+## Security boundary
+
+- Imported history is processed as **data**. Historical commands are not executed.
+- Secret redaction is heuristic and must not be treated as a guarantee.
+- Never publish a converted transcript without reviewing it for credentials, personal data, private source, or proprietary context.
+- The implementation does not reverse-engineer or write to Antigravity's opaque internal session database.
 
 ## Contributing
-See `CONTRIBUTING.md`.
+
+Useful contributions include:
+
+- additional provider transcript fixtures and adapters;
+- fidelity/loss-report improvements;
+- redaction edge-case tests;
+- target exporters for providers with documented ingestion formats;
+- schema/versioning feedback;
+- CLI ergonomics and documentation;
+- reproducible evidence about which fields survive real cross-provider conversions.
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution contract.
+
+## Feedback wanted
+
+The most useful criticism is technical and falsifiable:
+
+- Which session fields should ASEF treat as durable state rather than provider noise?
+- Where does the current fidelity model overstate preservation?
+- Which provider should be the next source or target adapter?
+- What minimum import API would a coding-agent runtime need for safe historical rehydration?
+
+If this interoperability problem is useful to you, starring the repository helps other developers discover the reference implementation.
 
 ## License
-MIT License.
+
+MIT License. See [LICENSE](LICENSE).
