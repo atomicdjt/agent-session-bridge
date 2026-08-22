@@ -3,21 +3,36 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "agent-session-bridge"
+name = "atomicdjt-agent-session-bridge"
 version = "0.1.0"
-description = "Provider-neutral reference implementation for portable coding-agent session history."
+description = "Provider-neutral reference implementation for portable coding-agent session history with explicit fidelity and loss reporting."
 readme = "README.md"
 license = {text = "MIT"}
-authors = [{name = "Agent Session Bridge Contributors"}]
+authors = [{name = "David Turner"}]
 requires-python = ">=3.9"
 dependencies = [
     "pydantic>=2.0.0",
 ]
+keywords = [
+    "ai-agents",
+    "coding-agents",
+    "claude-code",
+    "session-portability",
+    "interoperability",
+]
 classifiers = [
-    "Programming Language :: Python :: 3",
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
+
+[project.urls]
+Homepage = "https://github.com/atomicdjt/agent-session-bridge"
+Repository = "https://github.com/atomicdjt/agent-session-bridge"
+Issues = "https://github.com/atomicdjt/agent-session-bridge/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -28,4 +43,3 @@ dev = [
 
 [project.scripts]
 agent-session = "cli.main:main"
-
