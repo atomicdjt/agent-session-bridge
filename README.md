@@ -6,6 +6,10 @@ Agent Session Bridge is an MIT-licensed reference implementation for normalizing
 
 > **Current status:** Claude Code JSONL import, ASEF normalization, heuristic secret redaction, loss reporting, and Antigravity derived-log export work today. Native Antigravity session rehydration is **not** currently supported because Antigravity does not expose a safe external session-import boundary.
 
+![Agent Session Bridge quick tour](docs/images/agent-session-bridge-quick-tour.gif)
+
+*Animated architecture tour based on the repository's documented behavior; this is not a fabricated live screen recording.*
+
 ## Why this exists
 
 Coding agents can accumulate hours of structured state: messages, tool calls, tool results, timestamps, and execution context. Switching tools usually reduces that history to a hand-written or model-generated summary.
