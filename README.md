@@ -154,7 +154,7 @@ As this is a historical structural projection:
 - Root boundaries may be derived from observed Step timestamps.
 - Where independent tool completion timing is unavailable from ATIF, the projection does not pretend to have measured runtime duration.
 
-For more details, see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md).
+For implementation details, see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md). For the evidence model, ecosystem comparison, limitations, and external-review questions, see [Reconstructing Agent Traces After the Fact Without Inventing Runtime Truth](docs/HISTORICAL_OBSERVABILITY_WRITEUP.md).
 
 ## Migration from v0.1 ASEF output
 
