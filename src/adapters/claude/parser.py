@@ -157,7 +157,7 @@ def _parse_content_blocks(
             )
             fidelity.tool_calls_preserved += 1
         elif block_type == "tool_result":
-            if role == "assistant":
+            if role != "user":
                 fidelity.unsupported_source_blocks += 1
                 continue
             result_call_id = block.get("tool_use_id")
