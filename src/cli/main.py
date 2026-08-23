@@ -8,9 +8,6 @@ from security.redact import redact_trajectory
 
 def import_session(args: argparse.Namespace) -> None:
     with open(args.source, encoding="utf-8") as source_file:
-        if args.from_format != "claude-code":
-            print(f"Unsupported format: {args.from_format}")
-            sys.exit(1)
         trajectory = redact_trajectory(parse_claude_jsonl(source_file))
 
     output = trajectory.model_dump_json(indent=2)
@@ -28,25 +25,25 @@ def import_session(args: argparse.Namespace) -> None:
         fidelity = bridge.get("fidelity")
         if not isinstance(fidelity, dict):
             raise RuntimeError("ATIF trajectory is missing an ASB fidelity report.")
-        print("\n--- ASB Fidelity Report ---")
-        print(f"Source records preserved: {fidelity['source_records_preserved']}")
-        print(f"Tool calls preserved:     {fidelity['tool_calls_preserved']}")
-        print(f"Observations preserved:   {fidelity['observation_results_preserved']}")
-        print(f"Unsupported records:      {fidelity['unsupported_source_records']}")
-        print(f"Unsupported blocks:       {fidelity['unsupported_source_blocks']}")
-        print("---------------------------")
+        print("\n--- ASB Fidelity Report ---", file=sys.stderr)
+        print(
+            f"Source records preserved: {fidelity['source_records_preserved']}",
+            file=sys.stderr,
+        )
+        print(f"Tool calls preserved:     {fidelity['tool_calls_preserved']}", file=sys.stderr)
+        print(
+            f"Observations preserved:   {fidelity['observation_results_preserved']}",
+            file=sys.stderr,
+        )
+        print(f"Unsupported records:      {fidelity['unsupported_source_records']}", file=sys.stderr)
+        print(f"Unsupported blocks:       {fidelity['unsupported_source_blocks']}", file=sys.stderr)
+        print("---------------------------", file=sys.stderr)
 
 
 def convert_session(args: argparse.Namespace) -> None:
     with open(args.file, encoding="utf-8") as source_file:
-        if args.from_format != "claude-code":
-            print(f"Unsupported source format: {args.from_format}")
-            sys.exit(1)
         trajectory = redact_trajectory(parse_claude_jsonl(source_file))
 
-    if args.to_format != "antigravity":
-        print(f"Unsupported target format: {args.to_format}")
-        sys.exit(1)
     exported = export_with_report(trajectory)
     if exported.omitted_system_messages:
         print(

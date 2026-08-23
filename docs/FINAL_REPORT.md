@@ -7,7 +7,7 @@ To provide an ATIF-based reference implementation for cross-agent trajectory por
 **REFERENCE + RFC READY**. The implementation emits ATIF trajectories and reference target payloads, but cannot claim native Antigravity handoff because no supported upstream historical-session import API exists.
 
 ## 3. Key Findings & Adversarial Verification
-* **Derived Logs are Not Authoritative**: Adversarial ablation testing proved that Antigravity's `transcript.jsonl` files are derived output logs. Native resumption via `agy --conversation <uuid>` relies entirely on a complex, opaque SQLite database (`~/.gemini/antigravity/conversations/`).
+* **Derived Logs are Not Authoritative in the Tested Environment**: On Antigravity CLI 1.1.17 for Windows, adversarial ablation testing found that a synthesized `transcript.jsonl` alone was insufficient for native resumption. Resumable conversations in that environment were observed to use Antigravity-managed SQLite persistence under `~/.gemini/antigravity/conversations/`; this observation does not exhaustively characterize Antigravity's internal architecture.
 * **Safe Boundaries Maintained**: Mutating the SQLite database directly would violate core safety and undocumented-API guidelines. Therefore, the implementation cleanly exits with `UnsupportedNativeImport` and emits the required RFC payload rather than attempting dangerous reverse-engineering.
 * **Fidelity**: Supported Claude Code text, tool calls, and tool results are normalized into ATIF. Tool results are correlated to their originating calls; unsupported source records and blocks are counted in ASB's namespaced fidelity extension. The current adapter does not claim to preserve unavailable metrics or unsupported block types.
 

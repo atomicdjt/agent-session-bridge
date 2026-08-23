@@ -13,7 +13,7 @@ Agent Session Bridge emits a valid [ATIF v1.7](https://github.com/harbor-framewo
 | `Turn` role, time, text | `Step.source`, `timestamp`, `message` | Preserved for supported records |
 | `ToolInvocation` | agent-step `tool_calls` | Preserved with ID, name, and JSON arguments |
 | `ToolResult` | originating agent-step `observation.results` | Normalized from Claude's later user block; correlated by `source_call_id` |
-| `Workspace` / repository metadata | `extra.agent_session_bridge.workspace` | ATIF has no portable workspace contract; source-derived metadata only |
+| `Workspace` / repository metadata | `extra.agent_session_bridge.workspace` | ATIF has no portable workspace contract; source-derived metadata only. `redact_trajectory` omits `workspace.cwd` from redacted output. |
 | `Provenance` / `LossReport` | `extra.agent_session_bridge.provenance` / `.fidelity` | ASB extension, never represented as ATIF core fields |
 | `ExecutionMetadata` | ATIF `metrics` / `final_metrics` when source data supports them | Current Claude adapter does not populate source metrics |
 | `Artifact`, `decisions`, `unresolved_work` | No direct current mapping | The v0.1 parser never populated them; no compatibility claim is made |

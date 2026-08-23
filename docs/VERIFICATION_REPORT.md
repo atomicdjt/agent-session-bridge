@@ -33,8 +33,8 @@ I performed controlled ablation experiments to characterize persistence behavior
 This mapping is a reference transformation to observed derived-log structures; it is not a native Antigravity ingestion format.
 
 ## 4. Parser Resilience
-* **Malformed JSON / truncated lines:** Caught via `JSONDecodeError` and reported through loss accounting.
-* **Credential redaction:** The `redact_trajectory` heuristic is tested against an intentionally synthetic `api_key` value while preserving valid ATIF structure.
+* **Malformed JSON / truncated lines / non-object JSON:** Counted through `extra.agent_session_bridge.fidelity` rather than silently discarded or reaching field access.
+* **Credential redaction:** The `redact_trajectory` heuristic is tested against intentionally synthetic credential values in ATIF strings and `ContentPart` text while preserving valid ATIF structure. It omits `extra.agent_session_bridge.workspace.cwd` from redacted output.
 * **Huge records:** Each JSONL record is parsed as a complete line, so maximum record size remains bounded by available memory.
 
 ## 5. Corrected Conclusions

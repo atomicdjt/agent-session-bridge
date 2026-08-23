@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from atif import Trajectory
+from atif import ContentPart, Trajectory
 
 SECRET_PATTERNS = [
     (
@@ -19,14 +19,13 @@ SECRET_PATTERNS = [
 def redact_trajectory(trajectory: Trajectory) -> Trajectory:
     """Apply best-effort redaction without changing the ATIF document shape."""
     for step in trajectory.steps:
-        if isinstance(step.message, str):
-            step.message = _redact_text(step.message)
+        step.message = _redact_content(step.message)
         for tool_call in step.tool_calls or []:
             tool_call.arguments = _redact_value(tool_call.arguments)
         if step.observation:
             for result in step.observation.results:
-                if isinstance(result.content, str):
-                    result.content = _redact_text(result.content)
+                result.content = _redact_optional_content(result.content)
+    trajectory.extra = _redact_extra(trajectory.extra)
     return trajectory
 
 
@@ -43,6 +42,36 @@ def _redact_value(value: Any) -> Any:
     if isinstance(value, dict):
         return {key: _redact_value(item) for key, item in value.items()}
     return value
+
+
+def _redact_content(value: str | list[ContentPart]) -> str | list[ContentPart]:
+    if isinstance(value, str):
+        return _redact_text(value)
+    return [ContentPart.model_validate(_redact_value(part.model_dump())) for part in value]
+
+
+def _redact_optional_content(
+    value: str | list[ContentPart] | None,
+) -> str | list[ContentPart] | None:
+    if value is None:
+        return None
+    return _redact_content(value)
+
+
+def _redact_extra(extra: dict[str, Any] | None) -> dict[str, Any] | None:
+    redacted = _redact_value(extra)
+    if not isinstance(redacted, dict):
+        return redacted
+    bridge = redacted.get("agent_session_bridge")
+    if not isinstance(bridge, dict):
+        return redacted
+    workspace = bridge.get("workspace")
+    if not isinstance(workspace, dict):
+        return redacted
+    workspace.pop("cwd", None)
+    if not workspace:
+        bridge.pop("workspace", None)
+    return redacted
 
 
 def _redact_text(value: str) -> str:

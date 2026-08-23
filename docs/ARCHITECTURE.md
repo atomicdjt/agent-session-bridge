@@ -34,4 +34,4 @@ Only the target harness can validate and create native session state. An ATIF do
 
 ## Antigravity boundary
 
-The Antigravity exporter generates a reference mapping to observed derived `transcript.jsonl` records. It deliberately stops before Antigravity's internal SQLite persistence. A supported target-side operation such as `agy import-session --atif trajectory.atif.json` would be required to close the native-resumption boundary.
+The Antigravity exporter generates a reference mapping to observed derived `transcript.jsonl` records. It deliberately stops before Antigravity's internal SQLite persistence. A supported target-side operation such as `agy import-session --source trajectory.atif.json --format atif` would be required to close the native-resumption boundary.

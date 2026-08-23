@@ -11,7 +11,7 @@ Add an explicit historical-session import boundary to `agy` that accepts validat
 ### Proposed Interface
 ```bash
 agy import-session \
-  --source <file.jsonl> \
+  --source <file> \
   --format <format> \
   [--dry-run]
 ```

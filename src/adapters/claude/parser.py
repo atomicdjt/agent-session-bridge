@@ -35,6 +35,9 @@ def parse_claude_jsonl(file_stream: TextIO) -> Trajectory:
         except json.JSONDecodeError:
             fidelity.unsupported_source_records += 1
             continue
+        if not isinstance(record, dict):
+            fidelity.unsupported_source_records += 1
+            continue
 
         record_type = record.get("type")
         if record_type not in {"user", "assistant", "system"}:
@@ -136,13 +139,18 @@ def _parse_content_blocks(
             if role != "assistant":
                 fidelity.unsupported_source_blocks += 1
                 continue
+            call_id = block.get("id")
             arguments = block.get("input", {})
-            if not isinstance(arguments, dict):
+            if (
+                not isinstance(call_id, str)
+                or not call_id.strip()
+                or not isinstance(arguments, dict)
+            ):
                 fidelity.unsupported_source_blocks += 1
                 continue
             tool_calls.append(
                 ToolCall(
-                    tool_call_id=str(block.get("id", "")),
+                    tool_call_id=call_id,
                     function_name=str(block.get("name", "")),
                     arguments=arguments,
                 )
@@ -152,29 +160,39 @@ def _parse_content_blocks(
             if role == "assistant":
                 fidelity.unsupported_source_blocks += 1
                 continue
+            result_call_id = block.get("tool_use_id")
             tool_results.append(
                 ObservationResult(
-                    source_call_id=str(block.get("tool_use_id", "")) or None,
-                    content=_tool_result_text(block.get("content", "")),
+                    source_call_id=(
+                        result_call_id
+                        if isinstance(result_call_id, str) and result_call_id.strip()
+                        else None
+                    ),
+                    content=_tool_result_text(block.get("content", ""), fidelity),
                     extra={"is_error": bool(block.get("is_error"))}
                     if block.get("is_error")
                     else None,
                 )
             )
-            fidelity.observation_results_preserved += 1
         else:
             fidelity.unsupported_source_blocks += 1
     return "\n".join(part for part in text_parts if part), tool_calls, tool_results
 
 
-def _tool_result_text(value: Any) -> str:
+def _tool_result_text(value: Any, fidelity: FidelityReport) -> str:
+    if isinstance(value, str):
+        return value
     if isinstance(value, list):
-        return "".join(
-            str(block.get("text", ""))
-            for block in value
-            if isinstance(block, dict) and block.get("type") == "text"
-        )
-    return str(value)
+        text_parts: list[str] = []
+        for block in value:
+            if isinstance(block, dict) and block.get("type") == "text":
+                text = block.get("text")
+                if isinstance(text, str):
+                    text_parts.append(text)
+                    continue
+            fidelity.unsupported_source_blocks += 1
+        return "".join(text_parts)
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
 def _attach_tool_results(
@@ -183,13 +201,16 @@ def _attach_tool_results(
     fidelity: FidelityReport,
 ) -> None:
     for result in results:
-        source_step = tool_call_steps.get(result.source_call_id or "")
+        source_step = (
+            tool_call_steps.get(result.source_call_id) if result.source_call_id else None
+        )
         if source_step is None:
             fidelity.orphaned_tool_results += 1
             continue
         if source_step.observation is None:
             source_step.observation = Observation(results=[])
         source_step.observation.results.append(result)
+        fidelity.observation_results_preserved += 1
 
 
 def _workspace_metadata(cwd: str | None, git_branch: str | None) -> dict[str, Any] | None:
