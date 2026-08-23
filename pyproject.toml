@@ -42,5 +42,12 @@ dev = [
     "ruff>=0.0.280"
 ]
 
+observability = [
+    "opentelemetry-api>=1.20.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-exporter-otlp>=1.20.0",
+    "openinference-semantic-conventions>=0.1.0",
+]
+
 [project.scripts]
 agent-session = "cli.main:main"

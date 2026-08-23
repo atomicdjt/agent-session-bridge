@@ -100,6 +100,62 @@ For the current Claude Code adapter, ASB preserves supported roles, ISO-8601 tim
 - Do not publish a converted transcript without reviewing it for credentials, personal data, private source, or proprietary context.
 - ASB does not reverse-engineer or write Antigravity's opaque internal session database.
 
+## Optional observability projection
+
+The observability implementation is an optional downstream projection of ATIF, not a replacement for ATIF, and not original runtime instrumentation. It is a historical structural projection.
+
+```text
+provider transcript
+        ↓
+Agent Session Bridge
+        ↓
+ATIF v1.7
+        ↓
+historical observability projection
+        ↓
+OpenTelemetry / OpenInference
+        ↓
+OTLP
+        ↓
+Phoenix or another compatible backend
+```
+
+To install the optional observability dependencies:
+
+```bash
+python -m pip install -e ".[observability]"
+```
+
+For the local Phoenix example, Phoenix may be installed separately. It is not required for core Agent Session Bridge operation:
+
+```bash
+python -m pip install arize-phoenix
+```
+
+A Claude Code source may also be observed using the existing supported `--from claude-code` path where appropriate.
+
+```bash
+agent-session observe trajectory.atif.json \
+  --from atif \
+  --backend phoenix \
+  --endpoint http://127.0.0.1:6006/v1/traces
+```
+
+### Privacy
+
+- `metadata-only` is the default.
+- `redacted-content` exports redacted textual content.
+- `full-content` must be explicitly selected and may expose sensitive transcript data. Treat `full-content` carefully.
+
+### Historical timing
+
+As this is a historical structural projection:
+- ATIF Step timestamps may be represented as observed timing.
+- Root boundaries may be derived from observed Step timestamps.
+- Where independent tool completion timing is unavailable from ATIF, the projection does not pretend to have measured runtime duration.
+
+For more details, see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md).
+
 ## Migration from v0.1 ASEF output
 
 v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not ATIF documents and must not be relabeled as such. Re-run the original source transcript through `agent-session import` to produce a validated `*.atif.json` file, then review the ASB fidelity report. Python 3.11 is now the minimum supported version because the official ATIF models require it.
