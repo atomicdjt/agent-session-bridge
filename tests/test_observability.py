@@ -356,3 +356,20 @@ def test_cli_observe_empty_claude_trajectory_fails_before_exporter_setup(memory_
     mock_setup.assert_not_called()
     captured = capsys.readouterr()
     assert "Error: trajectory contains no valid steps to export." in captured.out
+
+
+def test_parse_source_time_exact_precision():
+    from observability.spans import parse_source_time
+
+    # 1. 1970-01-01T00:00:00.000001+00:00
+    assert parse_source_time("1970-01-01T00:00:00.000001+00:00") == 1000
+
+    # 2. Modern UTC timestamp with microseconds
+    assert parse_source_time("2026-08-21T10:15:30.123456Z") == 1787307330123456000
+    assert parse_source_time("2026-08-21T10:15:30.123456+00:00") == 1787307330123456000
+
+    # 3. Modern timestamp with a positive UTC offset
+    assert parse_source_time("2026-08-21T10:15:30.123456+02:00") == 1787300130123456000
+
+    # 4. Modern timestamp with a negative UTC offset
+    assert parse_source_time("2026-08-21T10:15:30.123456-05:00") == 1787325330123456000

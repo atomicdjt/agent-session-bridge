@@ -15,9 +15,13 @@ tracer = trace.get_tracer("agent-session-bridge")
 def parse_source_time(ts: str) -> int:
     try:
         dt = datetime.fromisoformat(ts)
-        if dt.tzinfo is None or dt.utcoffset() is None:
+        offset = dt.utcoffset()
+        if dt.tzinfo is None or offset is None:
             raise ValueError()
-        return int(dt.timestamp() * 1e9)
+        utc_time = dt.replace(tzinfo=None) - offset
+        delta = utc_time - datetime(1970, 1, 1)  # noqa: DTZ001
+        nanoseconds = (delta.days * 86400 + delta.seconds) * 1_000_000_000 + delta.microseconds * 1_000
+        return nanoseconds
     except (AttributeError, ValueError):
         raise ValueError(
             "observability projection requires a source-observed ISO-8601 timestamp for every step"
