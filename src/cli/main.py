@@ -92,6 +92,10 @@ def observe_session(args: argparse.Namespace) -> None:
             print(f"Unsupported source format: {args.from_format}")
             sys.exit(1)
 
+    if not trajectory.steps:
+        print("Error: trajectory contains no valid steps to export.")
+        sys.exit(1)
+
     provider = setup_exporter(endpoint=args.endpoint, console=args.console)
     try:
         project_trajectory(trajectory, privacy_mode=args.privacy)

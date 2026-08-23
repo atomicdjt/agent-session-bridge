@@ -279,3 +279,80 @@ def test_cli_observe_metadata_only_mode(memory_exporter, tmp_path):
     metadata = "\n".join(str(value) for span in spans for value in span.attributes.values())
     assert sensitive_value not in metadata
     assert "[REDACTED]" not in metadata
+
+
+def test_timezone_naive_timestamp_rejected(memory_exporter):
+    with open("fixtures/claude_sample.atif.json", "r") as f:
+        trajectory = Trajectory.model_validate(json.load(f))
+    trajectory.steps[0].timestamp = "2026-08-21T10:00:00"
+    with pytest.raises(ValueError, match="source-observed ISO-8601 timestamp for every step"):
+        project_trajectory(trajectory)
+    assert len(memory_exporter.get_finished_spans()) == 0
+
+
+def test_timezone_aware_timestamps_accepted(memory_exporter):
+    with open("fixtures/claude_sample.atif.json", "r") as f:
+        trajectory = Trajectory.model_validate(json.load(f))
+    valid_times = [
+        "2026-08-21T10:00:00Z",
+        "2026-08-21T10:00:00+00:00",
+        "2026-08-21T10:00:00-05:00"
+    ]
+    for step, tz_time in zip(trajectory.steps, valid_times):
+        step.timestamp = tz_time
+    for step in trajectory.steps[len(valid_times):]:
+        step.timestamp = valid_times[0]
+
+    project_trajectory(trajectory)
+    assert len(memory_exporter.get_finished_spans()) > 0
+
+
+def test_cli_observe_empty_atif_trajectory_fails_before_exporter_setup(memory_exporter, tmp_path, capsys):
+    source_file = tmp_path / "empty.json"
+    source_file.write_text(json.dumps({
+        "schema_version": "ATIF-v1.7",
+        "session_id": "empty1",
+        "agent": {"name": "test", "version": "1.0"},
+        "steps": []
+    }), encoding="utf-8")
+
+    args = argparse.Namespace(
+        from_format="atif",
+        backend="phoenix",
+        endpoint="",
+        privacy="metadata-only",
+        console=False,
+        file=str(source_file)
+    )
+
+    with patch("observability.exporter.setup_exporter") as mock_setup:
+        with pytest.raises(SystemExit) as exc:
+            observe_session(args)
+        assert exc.value.code == 1
+
+    mock_setup.assert_not_called()
+    captured = capsys.readouterr()
+    assert "Error: trajectory contains no valid steps to export." in captured.out
+
+
+def test_cli_observe_empty_claude_trajectory_fails_before_exporter_setup(memory_exporter, tmp_path, capsys):
+    source_file = tmp_path / "empty_claude.jsonl"
+    source_file.write_text("", encoding="utf-8")
+
+    args = argparse.Namespace(
+        from_format="claude-code",
+        backend="phoenix",
+        endpoint="",
+        privacy="metadata-only",
+        console=False,
+        file=str(source_file)
+    )
+
+    with patch("observability.exporter.setup_exporter") as mock_setup:
+        with pytest.raises(SystemExit) as exc:
+            observe_session(args)
+        assert exc.value.code == 1
+
+    mock_setup.assert_not_called()
+    captured = capsys.readouterr()
+    assert "Error: trajectory contains no valid steps to export." in captured.out

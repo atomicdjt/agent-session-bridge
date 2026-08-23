@@ -15,6 +15,8 @@ tracer = trace.get_tracer("agent-session-bridge")
 def parse_source_time(ts: str) -> int:
     try:
         dt = datetime.fromisoformat(ts)
+        if dt.tzinfo is None or dt.utcoffset() is None:
+            raise ValueError()
         return int(dt.timestamp() * 1e9)
     except (AttributeError, ValueError):
         raise ValueError(
