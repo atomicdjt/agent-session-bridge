@@ -164,3 +164,118 @@ def test_missing_timestamp_is_rejected_instead_of_fabricated(memory_exporter):
     trajectory.steps[0].timestamp = ""
     with pytest.raises(ValueError, match="source-observed ISO-8601"):
         project_trajectory(trajectory)
+
+
+def test_missing_timestamp_in_later_step_is_rejected_before_any_spans_created(memory_exporter):
+    with open("fixtures/claude_sample.atif.json", "r") as f:
+        trajectory = Trajectory.model_validate(json.load(f))
+    # valid timestamp on step 0, invalid on step 1
+    assert trajectory.steps[0].timestamp
+    trajectory.steps[1].timestamp = ""
+
+    with pytest.raises(ValueError, match="source-observed ISO-8601"):
+        project_trajectory(trajectory)
+
+    # Should fail BEFORE exporting any spans
+    assert len(memory_exporter.get_finished_spans()) == 0
+
+
+import argparse
+from unittest.mock import patch
+
+from cli.main import observe_session
+
+
+def test_cli_observe_preserves_content_in_full_content_mode(memory_exporter, tmp_path):
+    source_file = tmp_path / "sensitive.jsonl"
+    sensitive_value = "SECRET_TOKEN_DO_NOT_EXPORT"
+    source_file.write_text(json.dumps({
+        "type": "user",
+        "sessionId": "s4",
+        "timestamp": "2026-08-21T10:00:00Z",
+        "version": "1.0",
+        "message": {
+            "role": "user",
+            "content": [{"type": "text", "text": f'api_key="{sensitive_value}"'}],
+        },
+    }), encoding="utf-8")
+
+    args = argparse.Namespace(
+        from_format="claude-code",
+        backend="phoenix",
+        endpoint="",
+        privacy="full-content",
+        console=False,
+        file=str(source_file)
+    )
+
+    with patch("observability.exporter.setup_exporter", return_value=_global_provider):
+        observe_session(args)
+
+    spans = memory_exporter.get_finished_spans()
+    full = "\n".join(str(value) for span in spans for value in span.attributes.values())
+    assert sensitive_value in full
+
+
+def test_cli_observe_redacts_content_in_redacted_content_mode(memory_exporter, tmp_path):
+    source_file = tmp_path / "sensitive.jsonl"
+    sensitive_value = "SECRET_TOKEN_DO_NOT_EXPORT"
+    source_file.write_text(json.dumps({
+        "type": "user",
+        "sessionId": "s4",
+        "timestamp": "2026-08-21T10:00:00Z",
+        "version": "1.0",
+        "message": {
+            "role": "user",
+            "content": [{"type": "text", "text": f'api_key="{sensitive_value}"'}],
+        },
+    }), encoding="utf-8")
+
+    args = argparse.Namespace(
+        from_format="claude-code",
+        backend="phoenix",
+        endpoint="",
+        privacy="redacted-content",
+        console=False,
+        file=str(source_file)
+    )
+
+    with patch("observability.exporter.setup_exporter", return_value=_global_provider):
+        observe_session(args)
+
+    spans = memory_exporter.get_finished_spans()
+    redacted = "\n".join(str(value) for span in spans for value in span.attributes.values())
+    assert sensitive_value not in redacted
+    assert "[REDACTED]" in redacted
+
+
+def test_cli_observe_metadata_only_mode(memory_exporter, tmp_path):
+    source_file = tmp_path / "sensitive.jsonl"
+    sensitive_value = "SECRET_TOKEN_DO_NOT_EXPORT"
+    source_file.write_text(json.dumps({
+        "type": "user",
+        "sessionId": "s4",
+        "timestamp": "2026-08-21T10:00:00Z",
+        "version": "1.0",
+        "message": {
+            "role": "user",
+            "content": [{"type": "text", "text": f'api_key="{sensitive_value}"'}],
+        },
+    }), encoding="utf-8")
+
+    args = argparse.Namespace(
+        from_format="claude-code",
+        backend="phoenix",
+        endpoint="",
+        privacy="metadata-only",
+        console=False,
+        file=str(source_file)
+    )
+
+    with patch("observability.exporter.setup_exporter", return_value=_global_provider):
+        observe_session(args)
+
+    spans = memory_exporter.get_finished_spans()
+    metadata = "\n".join(str(value) for span in spans for value in span.attributes.values())
+    assert sensitive_value not in metadata
+    assert "[REDACTED]" not in metadata

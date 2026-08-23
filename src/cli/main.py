@@ -84,7 +84,7 @@ def observe_session(args: argparse.Namespace) -> None:
 
     with open(args.file, "r", encoding="utf-8") as f:
         if args.from_format == "claude-code":
-            trajectory = redact_trajectory(parse_claude_jsonl(f))
+            trajectory = parse_claude_jsonl(f)
         elif args.from_format == "atif":
             from atif import Trajectory
             trajectory = Trajectory.model_validate(json.load(f))

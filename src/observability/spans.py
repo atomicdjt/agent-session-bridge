@@ -18,7 +18,7 @@ def parse_source_time(ts: str) -> int:
         return int(dt.timestamp() * 1e9)
     except (AttributeError, ValueError):
         raise ValueError(
-            "observability projection requires a source-observed ISO-8601 timestamp for every turn"
+            "observability projection requires a source-observed ISO-8601 timestamp for every step"
         )
 
 
@@ -32,9 +32,11 @@ def project_trajectory(trajectory: Trajectory, privacy_mode: str = "metadata-onl
     # We will treat each step as a root operation in the trace,
     # or if we want one big trace, we can wrap the whole trajectory.
     # Let's wrap the whole trajectory in one root trace.
-    step_times = [parse_source_time(step.timestamp) for step in trajectory.steps if step.timestamp]
-    if not step_times:
-        raise ValueError("observability projection requires source-observed ISO-8601 timestamps")
+    step_times = []
+    for step in trajectory.steps:
+        if not step.timestamp:
+            raise ValueError("observability projection requires a source-observed ISO-8601 timestamp for every step")
+        step_times.append(parse_source_time(step.timestamp))
 
     start_time_ns = min(step_times)
     end_time_ns = max(step_times)
@@ -73,7 +75,7 @@ def project_trajectory(trajectory: Trajectory, privacy_mode: str = "metadata-onl
     try:
         for i, step in enumerate(trajectory.steps):
             if not step.timestamp:
-                raise ValueError("observability projection requires a source-observed ISO-8601 timestamp for every turn")
+                raise ValueError("observability projection requires a source-observed ISO-8601 timestamp for every step")
 
             step_start_ns = parse_source_time(step.timestamp)
             # A step timestamp is an observed point, not an execution interval.
