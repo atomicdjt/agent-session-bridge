@@ -1,0 +1,74 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "s1",
+  "agent": {
+    "name": "claude-code",
+    "version": "unknown",
+    "extra": {
+      "provider": "anthropic"
+    }
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "timestamp": "2026-08-21T10:00:00Z",
+      "source": "user",
+      "message": "List the files here."
+    },
+    {
+      "step_id": 2,
+      "timestamp": "2026-08-21T10:00:02Z",
+      "source": "agent",
+      "message": "Sure, let me check.",
+      "tool_calls": [
+        {
+          "tool_call_id": "t1",
+          "function_name": "ls",
+          "arguments": {
+            "dir": "."
+          }
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "t1",
+            "content": "file1.txt\nfile2.py"
+          }
+        ]
+      }
+    },
+    {
+      "step_id": 3,
+      "timestamp": "2026-08-21T10:00:05Z",
+      "source": "agent",
+      "message": "You have file1.txt and file2.py."
+    }
+  ],
+  "extra": {
+    "agent_session_bridge": {
+      "provenance": {
+        "original_format": "claude-code-jsonl",
+        "converted_by": "agent-session-bridge",
+        "conversion_timestamp": "2026-08-22T00:00:00+00:00"
+      },
+      "fidelity": {
+        "source_records_preserved": 4,
+        "tool_calls_preserved": 1,
+        "observation_results_preserved": 1,
+        "unsupported_source_records": 0,
+        "unsupported_source_blocks": 0,
+        "orphaned_tool_results": 0,
+        "transformations": [
+          "Moved Claude Code tool_result blocks to call-correlated ATIF observations."
+        ]
+      },
+      "workspace": {
+        "cwd": "/dev/workspace",
+        "repository": {
+          "branch": "main"
+        }
+      }
+    }
+  }
+}

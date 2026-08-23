@@ -1,10 +1,12 @@
 # Reference Implementation & Ingestion RFC
 
+> Historical submission draft, updated after the v0.2 ATIF migration. The current implementation is ATIF-based; this document retains the tested Antigravity boundary evidence.
+
 Hi everyone — building on the provenance/fail-closed discussion above, I built and adversarially tested a reference implementation for the **external side** of this request: [Agent Session Bridge](https://github.com/atomicdjt/agent-session-bridge).
 
 It currently provides:
 
-- a versioned provider-neutral session model (ASEF);
+- an ATIF v1.7 portable trajectory output;
 - a Claude Code JSONL importer with explicit preservation/loss accounting;
 - normalization of visible turns and tool/result records;
 - heuristic credential redaction; and

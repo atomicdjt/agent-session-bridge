@@ -6,7 +6,7 @@
 * **Safe Deserialization:** Parsing relies exclusively on standard JSON and Pydantic validation. No untrusted pickle-like formats, `eval`, or `exec` are utilized.
 
 ## Risks Mitigated
-* **Malformed Input:** Truncated JSON lines or completely invalid records are caught via `json.JSONDecodeError` and skipped, with failures tallied cleanly in the canonical Loss Report.
+* **Malformed Input:** Truncated JSON lines or completely invalid records are caught via `json.JSONDecodeError` and counted in `extra.agent_session_bridge.fidelity`.
 * **Internal State Corruption:** The project explicitly declines to modify Antigravity's internal SQLite database, mitigating the risk of corrupting developer workspaces.
 
 ## Risks Not Solved

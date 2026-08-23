@@ -9,9 +9,9 @@ High-value contributions include:
 1. **Source adapters** for documented transcript formats.
 2. **Target exporters/importers** where the target tool exposes a supported ingestion boundary.
 3. **Synthetic fixtures** that expose fidelity edge cases.
-4. **Loss accounting** improvements for fields that cannot be represented canonically.
+4. **ATIF fidelity accounting** improvements for fields that cannot be represented portably.
 5. **Secret-redaction tests** for realistic credential shapes.
-6. **ASEF schema/versioning critique** backed by concrete provider examples.
+6. **ATIF profile/versioning critique** backed by concrete provider examples.
 7. **CLI/documentation improvements** that make preservation and loss easier to inspect.
 
 Small, bounded pull requests are preferred over broad rewrites.
@@ -87,7 +87,7 @@ A target adapter must use a documented or explicitly supported ingestion mechani
 A successful parse/export does not prove that the target runtime can resume the full original session. Documentation and tests should distinguish:
 
 - parsing;
-- canonical normalization;
+- ATIF normalization;
 - payload generation;
 - supported target ingestion;
 - and actual historical session resumption.
@@ -112,7 +112,7 @@ A strong PR should answer:
 - How is the change tested?
 - What information is preserved, normalized, degraded, or dropped?
 - Does the change alter the security boundary?
-- Does it introduce a new provider-specific assumption into ASEF?
+- Does it introduce a new provider-specific assumption into an ASB ATIF extension or adapter?
 
 ## AI-assisted contributions
 
