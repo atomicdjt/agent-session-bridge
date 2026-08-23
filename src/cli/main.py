@@ -1,84 +1,116 @@
 import argparse
 import sys
 
-from adapters.antigravity.exporter import export_to_antigravity
+from adapters.antigravity.exporter import export_with_report
 from adapters.claude.parser import parse_claude_jsonl
-from security.redact import redact_session
+from security.redact import redact_trajectory
 
 
-def import_session(args):
-    with open(args.source, 'r', encoding='utf-8') as f:
-        if args.from_format == 'claude-code':
-            session = redact_session(parse_claude_jsonl(f))
-        else:
-            print(f"Unsupported format: {args.from_format}")
-            sys.exit(1)
-            
-    out_data = session.model_dump_json(indent=2)
+def import_session(args: argparse.Namespace) -> None:
+    with open(args.source, encoding="utf-8") as source_file:
+        trajectory = redact_trajectory(parse_claude_jsonl(source_file))
+
+    output = trajectory.model_dump_json(indent=2)
     if args.output:
-        with open(args.output, 'w', encoding='utf-8') as f:
-            f.write(out_data)
-        print(f"Session imported to {args.output}")
+        with open(args.output, "w", encoding="utf-8") as output_file:
+            output_file.write(output)
+        print(f"ATIF trajectory written to {args.output}")
     else:
-        print(out_data)
-        
+        print(output)
+
     if args.report:
-        loss = session.provenance.loss_report
-        print("\n--- Preservation Report ---")
-        print(f"Turns Preserved:       {loss.turns_preserved}")
-        print(f"Tools Preserved:       {loss.tools_preserved}")
-        print(f"Unsupported Events:    {loss.unsupported_events}")
-        print("---------------------------")
+        bridge = (trajectory.extra or {}).get("agent_session_bridge")
+        if not isinstance(bridge, dict):
+            raise RuntimeError("ATIF trajectory is missing ASB conversion metadata.")
+        fidelity = bridge.get("fidelity")
+        if not isinstance(fidelity, dict):
+            raise RuntimeError("ATIF trajectory is missing an ASB fidelity report.")
+        print("\n--- ASB Fidelity Report ---", file=sys.stderr)
+        print(
+            f"Source records preserved: {fidelity['source_records_preserved']}",
+            file=sys.stderr,
+        )
+        print(f"Tool calls preserved:     {fidelity['tool_calls_preserved']}", file=sys.stderr)
+        print(
+            f"Observations preserved:   {fidelity['observation_results_preserved']}",
+            file=sys.stderr,
+        )
+        print(f"Unsupported records:      {fidelity['unsupported_source_records']}", file=sys.stderr)
+        print(f"Unsupported blocks:       {fidelity['unsupported_source_blocks']}", file=sys.stderr)
+        print("---------------------------", file=sys.stderr)
 
-def convert_session(args):
-    with open(args.file, 'r', encoding='utf-8') as f:
-        if args.from_format == 'claude-code':
-            session = redact_session(parse_claude_jsonl(f))
-        else:
-            print(f"Unsupported source format: {args.from_format}")
-            sys.exit(1)
-            
-    if args.to_format == 'antigravity':
-        out_data = export_to_antigravity(session)
-    else:
-        print(f"Unsupported target format: {args.to_format}")
-        sys.exit(1)
-        
-    print(out_data)
 
-def handoff_session(args):
+def convert_session(args: argparse.Namespace) -> None:
+    with open(args.file, encoding="utf-8") as source_file:
+        trajectory = redact_trajectory(parse_claude_jsonl(source_file))
+
+    exported = export_with_report(trajectory)
+    if exported.omitted_system_messages:
+        print(
+            "ASB target-mapping warning: omitted "
+            f"{exported.omitted_system_messages} system message(s) because the observed "
+            "Antigravity derived-log shape has no evidenced system-message mapping.",
+            file=sys.stderr,
+        )
+    print(exported.payload)
+
+
+def handoff_session(args: argparse.Namespace) -> None:
     print("STATUS: UnsupportedNativeImport")
-    print("Reason: Antigravity CLI does not currently expose a supported 'import-session' or public API for writing session state.")
-    print("Rule check: Silently mutating the internal `.system_generated` databases is strictly forbidden by the security guidelines.")
-    print("Action: Outputting the canonical JSONL payload that would be supplied to an `agy import-session` command once available.")
+    print(
+        "Reason: Antigravity CLI does not currently expose a supported "
+        "'import-session' or public API for writing session state."
+    )
+    print(
+        "Rule check: Silently mutating the internal `.system_generated` databases "
+        "is strictly forbidden by the security guidelines."
+    )
+    print(
+        "Action: Outputting an ATIF-derived JSONL payload that could be supplied "
+        "to an `agy import-session` command once one exists."
+    )
     print("=" * 80)
     convert_session(args)
 
-def main():
+
+def main() -> None:
     parser = argparse.ArgumentParser(description="Agent Session Bridge")
     subparsers = parser.add_subparsers(dest="command", required=True)
-    
-    import_p = subparsers.add_parser('import')
-    import_p.add_argument('--source', required=True)
-    import_p.add_argument('--from', dest='from_format', required=True, choices=['claude-code'])
-    import_p.add_argument('--output')
-    import_p.add_argument('--report', action='store_true')
-    import_p.set_defaults(func=import_session)
-    
-    convert_p = subparsers.add_parser('convert')
-    convert_p.add_argument('--from', dest='from_format', required=True, choices=['claude-code'])
-    convert_p.add_argument('--to', dest='to_format', required=True, choices=['antigravity'])
-    convert_p.add_argument('file')
-    convert_p.set_defaults(func=convert_session)
 
-    handoff_p = subparsers.add_parser('handoff')
-    handoff_p.add_argument('--from', dest='from_format', required=True, choices=['claude-code'])
-    handoff_p.add_argument('--to', dest='to_format', required=True, choices=['antigravity'])
-    handoff_p.add_argument('file')
-    handoff_p.set_defaults(func=handoff_session)
-    
+    import_parser = subparsers.add_parser(
+        "import", help="Normalize a supported source transcript into ATIF v1.7."
+    )
+    import_parser.add_argument("--source", required=True)
+    import_parser.add_argument(
+        "--from", dest="from_format", required=True, choices=["claude-code"]
+    )
+    import_parser.add_argument("--output")
+    import_parser.add_argument("--report", action="store_true")
+    import_parser.set_defaults(func=import_session)
+
+    convert_parser = subparsers.add_parser("convert")
+    convert_parser.add_argument(
+        "--from", dest="from_format", required=True, choices=["claude-code"]
+    )
+    convert_parser.add_argument(
+        "--to", dest="to_format", required=True, choices=["antigravity"]
+    )
+    convert_parser.add_argument("file")
+    convert_parser.set_defaults(func=convert_session)
+
+    handoff_parser = subparsers.add_parser("handoff")
+    handoff_parser.add_argument(
+        "--from", dest="from_format", required=True, choices=["claude-code"]
+    )
+    handoff_parser.add_argument(
+        "--to", dest="to_format", required=True, choices=["antigravity"]
+    )
+    handoff_parser.add_argument("file")
+    handoff_parser.set_defaults(func=handoff_session)
+
     args = parser.parse_args()
     args.func(args)
+
 
 if __name__ == "__main__":
     main()

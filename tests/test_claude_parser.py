@@ -1,25 +1,29 @@
+from atif import Trajectory
+
 from adapters.claude.parser import parse_claude_jsonl
 
 
 def test_parse_claude_sample():
     with open("fixtures/claude_sample.jsonl", "r") as f:
-        session = parse_claude_jsonl(f)
+        trajectory = parse_claude_jsonl(f)
     
-    assert session.session_id == "s1"
-    assert session.workspace.cwd == "/dev/workspace"
-    assert session.workspace.repository.branch == "main"
-    assert len(session.turns) == 4
+    assert isinstance(trajectory, Trajectory)
+    assert trajectory.session_id == "s1"
+    assert trajectory.extra["agent_session_bridge"]["workspace"]["cwd"] == "/dev/workspace"
+    assert trajectory.extra["agent_session_bridge"]["workspace"]["repository"]["branch"] == "main"
+    assert len(trajectory.steps) == 3
     
     # Check tool use
-    assert session.turns[1].tool_invocations[0].name == "ls"
-    assert session.turns[1].tool_invocations[0].tool_id == "t1"
+    assert trajectory.steps[1].tool_calls[0].function_name == "ls"
+    assert trajectory.steps[1].tool_calls[0].tool_call_id == "t1"
     
     # Check tool result
-    assert session.turns[2].tool_results[0].tool_id == "t1"
-    assert "file1.txt" in session.turns[2].tool_results[0].output
+    assert trajectory.steps[1].observation.results[0].source_call_id == "t1"
+    assert "file1.txt" in trajectory.steps[1].observation.results[0].content
     
     # Check loss report
-    loss = session.provenance.loss_report
-    assert loss.turns_preserved == 4
-    assert loss.tools_preserved == 2 # 1 use, 1 result
-    assert loss.unsupported_events == 0
+    fidelity = trajectory.extra["agent_session_bridge"]["fidelity"]
+    assert fidelity["source_records_preserved"] == 4
+    assert fidelity["tool_calls_preserved"] == 1
+    assert fidelity["observation_results_preserved"] == 1
+    assert fidelity["unsupported_source_records"] == 0

@@ -1,41 +1,45 @@
 # Agent Session Bridge
 
-**Move structured coding-agent history between tools without collapsing everything into a prose summary.**
+**Move structured coding-agent history between tools without collapsing it into a prose summary.**
 
-Agent Session Bridge is an MIT-licensed reference implementation for normalizing coding-agent session history into the **Agent Session Exchange Format (ASEF)**, with explicit fidelity/loss accounting and provider adapters.
+Agent Session Bridge is an MIT-licensed reference implementation for converting supported coding-agent transcripts into the [Agent Trajectory Interchange Format (ATIF)](https://github.com/harbor-framework/harbor/blob/main/rfcs/0001-trajectory-format.md). It is not a competing interchange standard.
 
-> **Current status:** Claude Code JSONL import, ASEF normalization, heuristic secret redaction, loss reporting, and Antigravity derived-log export work today. Native Antigravity session rehydration is **not** currently supported because Antigravity does not expose a safe external session-import boundary.
+> **Current status:** Claude Code JSONL normalization to ATIF v1.7, heuristic secret redaction, ASB fidelity reporting, and an Antigravity derived-log mapping are implemented. Native Antigravity session rehydration is not supported because Antigravity has no supported historical-session import boundary.
 
 ![Agent Session Bridge quick tour](docs/images/agent-session-bridge-quick-tour.gif)
 
-*Animated architecture tour based on the repository's documented behavior; this is not a fabricated live screen recording.*
+*Animated architecture tour based on documented behavior; it is not a fabricated live screen recording.*
 
-## Why this exists
+## What ATIF provides and what ASB adds
 
-Coding agents can accumulate hours of structured state: messages, tool calls, tool results, timestamps, and execution context. Switching tools usually reduces that history to a hand-written or model-generated summary.
+ATIF is the portable trajectory layer: ordered system/user/agent steps, structured tool calls, call-correlated observations, agent metadata, metrics, and a namespaced `extra` extension mechanism. ASB converts provider-specific transcript shapes into that public format.
 
-Agent Session Bridge explores a stricter question:
+ASB's distinct responsibilities are deliberately narrower:
 
-> **What coding-agent state can be transferred faithfully, what must be normalized, and what is inevitably lost?**
+- provider-specific parsing and normalization;
+- best-effort secret redaction before export;
+- transformation/fidelity accounting in `extra.agent_session_bridge`;
+- target-specific mappings, such as the observed Antigravity derived-log shape; and
+- explicit refusal to fabricate native resumable session state.
 
-The project records those boundaries instead of pretending every provider has the same session model.
+The current Antigravity reference mapper reports any ATIF system messages it cannot map to the observed derived-log shape; it does not silently invent a target record type.
+
+See [the ATIF mapping](docs/FORMAT.md) and [layered architecture](docs/ARCHITECTURE.md) for exact preserved, transformed, and unsupported semantics.
 
 ## What works today
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Claude Code JSONL import | ✅ | Parses supported message/tool structures into ASEF |
-| Provider-neutral ASEF model | ✅ | Pydantic-validated, chronologically normalized representation |
-| Fidelity/loss reporting | ✅ | Records unsupported/degraded structures rather than silently dropping them |
-| Heuristic secret redaction | ✅ | Best-effort credential filtering; output still requires human review |
-| Antigravity derived-log mapping | ✅ | Produces the documented `transcript.jsonl`-style target payload |
-| Native Antigravity session import | ❌ blocked upstream | No supported API exists to reconstruct/resume external historical state |
+| Claude Code JSONL import | ✅ | Parses supported message and tool structures into ATIF v1.7 |
+| Portable interchange document | ✅ | Validated by the official `atif` Python models |
+| ASB fidelity reporting | ✅ | Namespaced provenance and unsupported/degraded source counts in ATIF `extra` |
+| Heuristic secret redaction | ✅ | Best effort only; output still requires human review |
+| Antigravity derived-log mapping | ✅ | Reference payload based on observed `transcript.jsonl` structures |
+| Native Antigravity session import | ❌ blocked upstream | No supported API creates or resumes external historical state |
 
 ## Quick start
 
-### Install from this repository
-
-This project is **not currently published on PyPI**. The PyPI distribution name `agent-session-bridge` is already used by an unrelated project, so **do not run `pip install agent-session-bridge` expecting this repository**.
+This project is not published as `agent-session-bridge` on PyPI; that name belongs to an unrelated project. Install from this repository with Python 3.11 or newer:
 
 ```bash
 git clone https://github.com/atomicdjt/agent-session-bridge.git
@@ -43,7 +47,7 @@ cd agent-session-bridge
 python -m venv .venv
 ```
 
-Activate the environment:
+Activate the environment, then install the package:
 
 ```bash
 # Linux/macOS
@@ -51,23 +55,19 @@ source .venv/bin/activate
 
 # Windows PowerShell
 .\.venv\Scripts\Activate.ps1
-```
 
-Install the project:
-
-```bash
 python -m pip install -e .
 ```
 
-Then inspect or convert a Claude Code transcript:
+Normalize a Claude Code transcript to an ATIF document, inspect ASB's source-fidelity report, or generate the Antigravity reference mapping:
 
 ```bash
-agent-session import --from claude-code --source your_claude_log.jsonl --report
+agent-session import --from claude-code --source your_claude_log.jsonl --output trajectory.atif.json --report
 agent-session convert --from claude-code --to antigravity your_claude_log.jsonl
 agent-session handoff --from claude-code --to antigravity your_claude_log.jsonl
 ```
 
-`handoff` currently returns `UnsupportedNativeImport` after producing the payload because native Antigravity history injection is blocked by the missing upstream import API.
+`handoff` returns `UnsupportedNativeImport` after producing the reference payload. It does not imply that Antigravity can resume the converted history.
 
 ## Architecture
 
@@ -75,78 +75,38 @@ agent-session handoff --from claude-code --to antigravity your_claude_log.jsonl
 provider transcript
        │
        ▼
- source adapter
+source parser and normalizer
        │
        ▼
-      ASEF ─────► loss report
+ATIF trajectory ─────► ASB provenance/fidelity extension
        │
-       ├────────► redacted portable representation
-       │
-       ▼
- target adapter
+       ├──────────────► redacted portable trajectory
        │
        ▼
- target payload / supported importer
+target-specific mapper
+       │
+       ▼
+target payload / supported importer, if one exists
 ```
 
-The implementation follows an extract-transform-export adapter model:
+ATIF makes a trajectory portable; it does not require target runtimes to ingest it as native state. Native resumption remains a target-owned capability, with target-owned validation, persistence, and security constraints.
 
-1. **Parser** — extracts provider-specific transcript structures.
-2. **Canonical model** — validates and normalizes them into ASEF.
-3. **Loss accounting** — records unsupported or degraded source information.
-4. **Redaction** — applies best-effort secret/PII heuristics.
-5. **Exporter** — maps ASEF into the target provider's supported representation.
+## Fidelity and security boundaries
 
-## Fidelity model
+For the current Claude Code adapter, ASB preserves supported roles, ISO-8601 timestamps, text, tool names, tool arguments, and tool results. It normalizes later Claude `tool_result` blocks into ATIF observations attached to their originating calls. Unsupported source records or blocks are counted in `extra.agent_session_bridge.fidelity`; they are never represented as successfully preserved.
 
-When translating Claude Code to ASEF:
+- Imported history is processed as data. Historical commands are never executed.
+- Redaction is heuristic and is not a guarantee.
+- Do not publish a converted transcript without reviewing it for credentials, personal data, private source, or proprietary context.
+- ASB does not reverse-engineer or write Antigravity's opaque internal session database.
 
-- **Preserved:** roles, ISO-8601 timestamps, plain text, tool names, tool arguments, supported tool results.
-- **Normalized:** `parentUuid` chains are flattened into chronological ordering; provider-specific tool-result placement is mapped into canonical tool-result records.
-- **Degraded/omitted:** provider metadata that has no stable target-independent meaning, including undocumented UI state and token metadata.
-- **Unsupported:** unknown provider-specific block types are counted in the loss report instead of being silently treated as preserved.
+## Migration from v0.1 ASEF output
 
-The design principle is simple: **portability claims must be inspectable.**
-
-## Antigravity integration boundary
-
-The project can map ASEF into the derived `transcript.jsonl` structure emitted by Antigravity, but native resumption remains blocked.
-
-Current Antigravity behavior relies on an internal SQLite conversation store with undocumented/opaque fields, and there is no supported `agy import-session` equivalent. Dropping a derived transcript into Antigravity's logs directory does not reconstruct a resumable historical session.
-
-The project therefore does **not** mutate Antigravity's internal database or claim a working native handoff where none exists. It provides the reference payload and an integration RFC for a safer upstream ingestion boundary.
-
-## Security boundary
-
-- Imported history is processed as **data**. Historical commands are not executed.
-- Secret redaction is heuristic and must not be treated as a guarantee.
-- Never publish a converted transcript without reviewing it for credentials, personal data, private source, or proprietary context.
-- The implementation does not reverse-engineer or write to Antigravity's opaque internal session database.
+v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not ATIF documents and must not be relabeled as such. Re-run the original source transcript through `agent-session import` to produce a validated `*.atif.json` file, then review the ASB fidelity report. Python 3.11 is now the minimum supported version because the official ATIF models require it.
 
 ## Contributing
 
-Useful contributions include:
-
-- additional provider transcript fixtures and adapters;
-- fidelity/loss-report improvements;
-- redaction edge-case tests;
-- target exporters for providers with documented ingestion formats;
-- schema/versioning feedback;
-- CLI ergonomics and documentation;
-- reproducible evidence about which fields survive real cross-provider conversions.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution contract.
-
-## Feedback wanted
-
-The most useful criticism is technical and falsifiable:
-
-- Which session fields should ASEF treat as durable state rather than provider noise?
-- Where does the current fidelity model overstate preservation?
-- Which provider should be the next source or target adapter?
-- What minimum import API would a coding-agent runtime need for safe historical rehydration?
-
-If this interoperability problem is useful to you, starring the repository helps other developers discover the reference implementation.
+Useful contributions include provider transcript fixtures, source adapters, target mappings for documented ingestion boundaries, fidelity-report improvements, and reproducible evidence about real cross-provider transformations. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
