@@ -373,3 +373,7 @@ def test_parse_source_time_exact_precision():
 
     # 4. Modern timestamp with a negative UTC offset
     assert parse_source_time("2026-08-21T10:15:30.123456-05:00") == 1787325330123456000
+
+    # 5. Boundary testing near datetime.min and datetime.max
+    assert parse_source_time("0001-01-01T00:00:00+01:00") == -62135600400000000000
+    assert parse_source_time("9999-12-31T23:59:59-01:00") == 253402304399000000000
