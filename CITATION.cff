@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use Agent Session Bridge in research or technical work, please cite this software."
+title: "Agent Session Bridge"
+type: software
+authors:
+  - family-names: "Turner"
+    given-names: "David"
+version: 0.2.0
+url: "https://github.com/atomicdjt/agent-session-bridge"
+repository-code: "https://github.com/atomicdjt/agent-session-bridge"
+license: MIT
+abstract: >-
+  ATIF-based reference implementation for portable coding-agent trajectories
+  with explicit fidelity and loss reporting, Claude Code import, and
+  target-specific mappings.
+keywords:
+  - ATIF
+  - coding agents
+  - agent interoperability
+  - session portability
+  - Claude Code
