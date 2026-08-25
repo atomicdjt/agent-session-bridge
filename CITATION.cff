@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: "Turner"
     given-names: "David"
-version: 0.2.0
+version: 0.2.1
 url: "https://github.com/atomicdjt/agent-session-bridge"
 repository-code: "https://github.com/atomicdjt/agent-session-bridge"
 license: MIT
