@@ -41,7 +41,21 @@ See [the ATIF mapping](docs/FORMAT.md) and [layered architecture](docs/ARCHITECT
 
 ## Quick start
 
-This project is not published as `agent-session-bridge` on PyPI; that name belongs to an unrelated project. It is packaged as `atomicdjt-agent-session-bridge` (build and install verified locally — sdist/wheel pass `twine check`, install cleanly into a fresh virtualenv, and the CLI runs end-to-end against the fixtures in this repo). It is not yet live on PyPI; see [Releasing](#releasing) for the exact remaining step. Until then, install from this repository with Python 3.11 or newer:
+This project is published on PyPI as `atomicdjt-agent-session-bridge`; the shorter name `agent-session-bridge` belongs to an unrelated project. Python 3.11 or newer is required.
+
+Install the published package:
+
+```bash
+python -m pip install atomicdjt-agent-session-bridge
+```
+
+To install the current published release explicitly:
+
+```bash
+python -m pip install atomicdjt-agent-session-bridge==0.2.1
+```
+
+For development from source:
 
 ```bash
 git clone https://github.com/atomicdjt/agent-session-bridge.git
@@ -164,9 +178,22 @@ v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not A
 
 ## Releasing
 
-`.github/workflows/publish.yml` builds the sdist/wheel, runs `twine check`, and publishes to PyPI via [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) on a `v*.*.*` tag push or manual dispatch. No PyPI token is stored in this repository.
+This project is published to PyPI through GitHub Actions and PyPI Trusted Publishing using OpenID Connect (OIDC). The workflow builds the wheel and source distribution, runs `twine check`, verifies that the release tag matches the project version, and publishes without storing a PyPI API token in this repository.
 
-Before the first publish, add a pending trusted publisher on pypi.org for a project named `atomicdjt-agent-session-bridge`, with owner `atomicdjt`, repository `agent-session-bridge`, workflow `publish.yml`, and environment `pypi`. That is the only step this workflow cannot perform on its own.
+The published package is available at:
+
+https://pypi.org/project/atomicdjt-agent-session-bridge/
+
+For future releases:
+
+1. Update `project.version` in `pyproject.toml` and any related release metadata.
+2. Merge the change into `main`.
+3. Create a matching GitHub tag and release from `main`, such as `v0.2.2`.
+4. Wait for the `Publish to PyPI` workflow to complete.
+5. Verify the new version on PyPI.
+6. Test installation in a clean environment.
+
+The tag must match the project version exactly. For example, tag `v0.2.2` requires project version `0.2.2`.
 
 ## Contributing
 
