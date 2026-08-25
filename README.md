@@ -2,6 +2,8 @@
 
 **Move structured coding-agent history between tools without collapsing it into a prose summary.**
 
+**[Canonical project page](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [Repository](https://github.com/atomicdjt/agent-session-bridge) · [Full portfolio](https://ai-project-portfolio-portfolio-hub.vercel.app/)**
+
 Agent Session Bridge is an MIT-licensed reference implementation for converting supported coding-agent transcripts into the [Agent Trajectory Interchange Format (ATIF)](https://github.com/harbor-framework/harbor/blob/main/rfcs/0001-trajectory-format.md). It is not a competing interchange standard.
 
 > **Current status:** Claude Code JSONL normalization to ATIF v1.7, heuristic secret redaction, ASB fidelity reporting, and an Antigravity derived-log mapping are implemented. Native Antigravity session rehydration is not supported because Antigravity has no supported historical-session import boundary.
