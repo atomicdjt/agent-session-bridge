@@ -12,6 +12,22 @@ SECRET_PATTERNS = [
         ),
         r'\1 = "[REDACTED]"',
     ),
+    (
+        re.compile(
+            r'(?i)\b(api[_-]?key|secret[_-]?key|access[_-]?token|password|token)'
+            r'\s*[:=]\s*[a-zA-Z0-9][a-zA-Z0-9_./+=-]{9,}'
+        ),
+        r'\1 = "[REDACTED]"',
+    ),
+    (
+        re.compile(r'(?i)\b(Bearer)\s+[a-zA-Z0-9._~+/=-]{10,}'),
+        r'\1 [REDACTED]',
+    ),
+    (
+        re.compile(r'(?i)\b(?:gh[pousr]_|github_pat_)[a-zA-Z0-9_]{10,}'),
+        "[REDACTED]",
+    ),
+    (re.compile(r'\bsk-[a-zA-Z0-9_-]{10,}'), "[REDACTED]"),
     (re.compile(r"xox[baprs]-[0-9a-zA-Z]{10,}"), "xox?-***REDACTED***"),
 ]
 
