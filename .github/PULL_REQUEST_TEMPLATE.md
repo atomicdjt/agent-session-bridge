@@ -1,8 +1,9 @@
 <!--
 Not every section applies to every PR. Delete what doesn't fit a trivial change;
 keep everything relevant on a security-, performance-, or correctness-sensitive one.
-Background: https://github.com/atomicdjt/atomicdjt/blob/main/writing/pull-request-descriptions-that-survive-review.md
 -->
+
+Background rationale: [Pull Request Descriptions That Survive Review](https://github.com/atomicdjt/atomicdjt/blob/5c9aacba79fc0c5ebd05a17845a2df781385b1a2/writing/pull-request-descriptions-that-survive-review.md)
 
 ## Summary
 <!-- One or two sentences: what changed, where. -->
