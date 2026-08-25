@@ -41,7 +41,7 @@ See [the ATIF mapping](docs/FORMAT.md) and [layered architecture](docs/ARCHITECT
 
 ## Quick start
 
-This project is not published as `agent-session-bridge` on PyPI; that name belongs to an unrelated project. Install from this repository with Python 3.11 or newer:
+This project is not published as `agent-session-bridge` on PyPI; that name belongs to an unrelated project. It is packaged as `atomicdjt-agent-session-bridge` (build and install verified locally — sdist/wheel pass `twine check`, install cleanly into a fresh virtualenv, and the CLI runs end-to-end against the fixtures in this repo). It is not yet live on PyPI; see [Releasing](#releasing) for the exact remaining step. Until then, install from this repository with Python 3.11 or newer:
 
 ```bash
 git clone https://github.com/atomicdjt/agent-session-bridge.git
@@ -161,6 +161,12 @@ For implementation details, see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md). 
 ## Migration from v0.1 ASEF output
 
 v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not ATIF documents and must not be relabeled as such. Re-run the original source transcript through `agent-session import` to produce a validated `*.atif.json` file, then review the ASB fidelity report. Python 3.11 is now the minimum supported version because the official ATIF models require it.
+
+## Releasing
+
+`.github/workflows/publish.yml` builds the sdist/wheel, runs `twine check`, and publishes to PyPI via [Trusted Publishing](https://docs.pypi.org/trusted-publishers/) (OIDC) on a `v*.*.*` tag push or manual dispatch. No PyPI token is stored in this repository.
+
+Before the first publish, add a pending trusted publisher on pypi.org for a project named `atomicdjt-agent-session-bridge`, with owner `atomicdjt`, repository `agent-session-bridge`, workflow `publish.yml`, and environment `pypi`. That is the only step this workflow cannot perform on its own.
 
 ## Contributing
 
