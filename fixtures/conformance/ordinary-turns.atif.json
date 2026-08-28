@@ -1,0 +1,40 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "fixture-ordinary-turns",
+  "agent": {
+    "name": "synthetic-agent",
+    "version": "fixture"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "timestamp": "2026-08-28T12:00:00Z",
+      "source": "user",
+      "message": "Summarize the fictional launch checklist."
+    },
+    {
+      "step_id": 2,
+      "timestamp": "2026-08-28T12:00:01Z",
+      "source": "agent",
+      "message": "The checklist has three synthetic items: scope, review, and handoff."
+    }
+  ],
+  "extra": {
+    "agent_session_bridge": {
+      "fixture": {
+        "case": "ordinary-turns",
+        "states": ["preserved"]
+      },
+      "fidelity": {
+        "source_records_preserved": 2,
+        "tool_calls_preserved": 0,
+        "observation_results_preserved": 0,
+        "unsupported_source_records": 0,
+        "unsupported_source_blocks": 0,
+        "orphaned_tool_results": 0,
+        "transformations": []
+      }
+    }
+  }
+}
+

@@ -1,0 +1,37 @@
+{
+  "schema_version": "ASB-conformance-v1",
+  "cases": [
+    {
+      "id": "ordinary-turns",
+      "document": "ordinary-turns.atif.json",
+      "states": ["preserved"]
+    },
+    {
+      "id": "tool-correlated-observations",
+      "document": "tool-correlated-observations.atif.json",
+      "states": ["preserved"]
+    },
+    {
+      "id": "multiple-tool-calls",
+      "document": "multiple-tool-calls.atif.json",
+      "states": ["preserved"]
+    },
+    {
+      "id": "chronological-normalization",
+      "source": "chronological-normalization.source.jsonl",
+      "document": "chronological-normalization.expected.atif.json",
+      "states": ["normalized"]
+    },
+    {
+      "id": "degraded-fidelity",
+      "document": "degraded-fidelity.atif.json",
+      "states": ["degraded", "unsupported"]
+    },
+    {
+      "id": "target-omitted",
+      "document": "target-omitted.atif.json",
+      "states": ["target-omitted"]
+    }
+  ]
+}
+

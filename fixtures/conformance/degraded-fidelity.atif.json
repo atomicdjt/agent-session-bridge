@@ -1,0 +1,44 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "fixture-degraded-fidelity",
+  "agent": {
+    "name": "synthetic-agent",
+    "version": "fixture"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "timestamp": "2026-08-28T12:05:00Z",
+      "source": "user",
+      "message": "Keep the supported text and report what cannot be represented."
+    },
+    {
+      "step_id": 2,
+      "timestamp": "2026-08-28T12:05:01Z",
+      "source": "agent",
+      "message": "The portable text is preserved."
+    }
+  ],
+  "extra": {
+    "agent_session_bridge": {
+      "fixture": {
+        "case": "degraded-fidelity",
+        "states": ["degraded", "unsupported"],
+        "unsupported_fields": ["provider_private_annotation", "binary_attachment"]
+      },
+      "fidelity": {
+        "source_records_preserved": 2,
+        "tool_calls_preserved": 0,
+        "observation_results_preserved": 0,
+        "unsupported_source_records": 1,
+        "unsupported_source_blocks": 2,
+        "orphaned_tool_results": 0,
+        "transformations": [
+          "Dropped provider_private_annotation because no portable ATIF field exists.",
+          "Dropped binary_attachment because this fixture exercises metadata-only export."
+        ]
+      }
+    }
+  }
+}
+

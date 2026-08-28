@@ -1,0 +1,55 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "fixture-target-omitted",
+  "agent": {
+    "name": "synthetic-agent",
+    "version": "fixture"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "timestamp": "2026-08-28T12:06:00Z",
+      "source": "system",
+      "message": "This system instruction has no field in the observed target log."
+    },
+    {
+      "step_id": 2,
+      "timestamp": "2026-08-28T12:06:01Z",
+      "source": "user",
+      "message": "Continue with the fictional task."
+    },
+    {
+      "step_id": 3,
+      "timestamp": "2026-08-28T12:06:02Z",
+      "source": "agent",
+      "message": "The target payload can represent this user and agent exchange."
+    }
+  ],
+  "extra": {
+    "agent_session_bridge": {
+      "fixture": {
+        "case": "target-omitted",
+        "states": ["target-omitted"],
+        "target": "antigravity-derived-log"
+      },
+      "fidelity": {
+        "source_records_preserved": 3,
+        "tool_calls_preserved": 0,
+        "observation_results_preserved": 0,
+        "unsupported_source_records": 0,
+        "unsupported_source_blocks": 0,
+        "orphaned_tool_results": 0,
+        "transformations": ["Target mapper omits one system message."]
+      },
+      "target_omissions": [
+        {
+          "target": "antigravity-derived-log",
+          "field": "system.message",
+          "count": 1,
+          "reason": "The observed target shape has no system-message record."
+        }
+      ]
+    }
+  }
+}
+

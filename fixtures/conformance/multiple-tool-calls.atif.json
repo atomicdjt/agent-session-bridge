@@ -1,0 +1,62 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "fixture-multiple-tool-calls",
+  "agent": {
+    "name": "synthetic-agent",
+    "version": "fixture"
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "timestamp": "2026-08-28T12:02:00Z",
+      "source": "agent",
+      "message": "I will inspect two fictional resources.",
+      "tool_calls": [
+        {
+          "tool_call_id": "fixture-call-a",
+          "function_name": "read_manifest",
+          "arguments": {
+            "path": "fictional-a.json"
+          }
+        },
+        {
+          "tool_call_id": "fixture-call-b",
+          "function_name": "read_manifest",
+          "arguments": {
+            "path": "fictional-b.json"
+          }
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "fixture-call-a",
+            "content": "fictional-a: ready"
+          },
+          {
+            "source_call_id": "fixture-call-b",
+            "content": "fictional-b: needs-review"
+          }
+        ]
+      }
+    }
+  ],
+  "extra": {
+    "agent_session_bridge": {
+      "fixture": {
+        "case": "multiple-tool-calls",
+        "states": ["preserved"]
+      },
+      "fidelity": {
+        "source_records_preserved": 1,
+        "tool_calls_preserved": 2,
+        "observation_results_preserved": 2,
+        "unsupported_source_records": 0,
+        "unsupported_source_blocks": 0,
+        "orphaned_tool_results": 0,
+        "transformations": []
+      }
+    }
+  }
+}
+
