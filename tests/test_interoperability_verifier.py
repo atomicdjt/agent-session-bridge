@@ -42,7 +42,7 @@ def test_canonical_fixture_passes_semantic_verifier(tmp_path: Path):
     """The committed canonical candidate satisfies every ASB semantic finding."""
     report = _verify(tmp_path, _valid_document())
 
-    assert report["summary"] == {"passed": True, "findings": 15, "conflicts": 0}
+    assert report["summary"] == {"passed": True, "findings": 17, "conflicts": 0}
     assert all(finding["state"] != "CONFLICT" for finding in report["findings"])
     Trajectory.model_validate(_valid_document())
 
@@ -151,6 +151,13 @@ def _shifted_source_case(
     source_facts: dict[str, Any] = oracle["source_facts"]
     source_facts["source_timestamps"].insert(1, None)
     source_facts["ignored_source_fields"][0]["record"] = 3
+    for indexed_fact in (
+        source_facts["unsupported_source_records"],
+        source_facts["unsupported_source_blocks"],
+    ):
+        for item in indexed_fact:
+            if item["record"] >= 2:
+                item["record"] += 1
     source_facts["unsupported_source_records"].insert(
         1, {"record": 2, "type": unsupported_type, "expected_state": "omitted"}
     )
@@ -175,13 +182,19 @@ def test_source_reader_keeps_positions_for_malformed_and_non_object_lines(
 
     assert len(records) == 3
     assert records[0] == {"type": "user"}
-    assert records[1] == {"_asb_unsupported_source_record": True}
-    assert records[2] == {"_asb_unsupported_source_record": True}
+    assert records[1] == {
+        "_asb_unsupported_source_record": True,
+        "_asb_unsupported_source_type": "malformed",
+    }
+    assert records[2] == {
+        "_asb_unsupported_source_record": True,
+        "_asb_unsupported_source_type": "list",
+    }
 
 
 @pytest.mark.parametrize(
     ("unsupported_line", "unsupported_type"),
-    [("not-json", "malformed"), ("[]", "array")],
+    [("not-json", "malformed"), ("[]", "list")],
 )
 def test_unsupported_source_lines_do_not_shift_ignored_field_oracle_indices(
     tmp_path: Path, unsupported_line: str, unsupported_type: str
@@ -193,11 +206,31 @@ def test_unsupported_source_lines_do_not_shift_ignored_field_oracle_indices(
 
     report = verify_files(source, output, oracle)
 
-    assert report["summary"] == {"passed": True, "findings": 15, "conflicts": 0}
+    assert report["summary"] == {"passed": True, "findings": 17, "conflicts": 0}
     ignored = next(
         finding for finding in report["findings"] if finding["name"] == "ignored_source_field"
     )
     assert ignored["state"] == "OMITTED"
+
+
+def test_empty_object_replacing_unsupported_record_conflicts_with_oracle_count(
+    tmp_path: Path,
+):
+    """The verifier rejects an oracle count that no longer matches parsed source records."""
+    source_lines = SOURCE.read_text(encoding="utf-8").splitlines()
+    source_lines[0] = "{}"
+    source = tmp_path / "changed-unsupported.source.jsonl"
+    source.write_text("\n".join(source_lines) + "\n", encoding="utf-8")
+
+    report = verify_files(source, _write_document(tmp_path, _valid_document()), ORACLE)
+
+    assert report["summary"]["passed"] is False
+    identity_finding = next(
+        finding
+        for finding in report["findings"]
+        if finding["name"] == "source_unsupported_record_identity"
+    )
+    assert identity_finding["state"] == "CONFLICT"
 
 
 def test_peer_unsupported_record_finding_is_not_a_self_comparison(tmp_path: Path):

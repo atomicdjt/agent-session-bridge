@@ -10,6 +10,8 @@ from typing import Any
 from atif import Trajectory
 from pydantic import ValidationError
 
+UNSUPPORTED_SOURCE_RECORD_SENTINEL = "_asb_unsupported_source_record"
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -175,11 +177,39 @@ def _verify_document(
         _match_result_map(expected_results, actual_result_map, implementation, oracle)
     )
 
-    unsupported_record_count = len(oracle["source_facts"]["unsupported_source_records"])
+    expected_unsupported_records = [
+        {key: item[key] for key in ("record", "type")}
+        for item in oracle["source_facts"]["unsupported_source_records"]
+    ]
+    actual_unsupported_records = _unsupported_source_record_descriptors(source_records)
+    findings.append(
+        _match(
+            "source_unsupported_record_identity",
+            expected_unsupported_records,
+            actual_unsupported_records,
+            "PRESERVED",
+            "oracle unsupported-record positions and types match parsed source records",
+        )
+    )
+    oracle_unsupported_record_count = len(expected_unsupported_records)
+    parsed_unsupported_record_count = len(actual_unsupported_records)
+    findings.append(
+        _match(
+            "source_unsupported_record_count",
+            oracle_unsupported_record_count,
+            parsed_unsupported_record_count,
+            "PRESERVED",
+            "oracle unsupported-record count matches parsed source records",
+        )
+    )
     unsupported_block_count = len(oracle["source_facts"]["unsupported_source_blocks"])
     fidelity = _fidelity(output_document)
     expected_fidelity = oracle["asb_policy"]["expected_fidelity"]
     if implementation == "asb":
+        expected_fidelity = {
+            **expected_fidelity,
+            "unsupported_source_records": parsed_unsupported_record_count,
+        }
         findings.append(
             _match(
                 "fidelity_accounting",
@@ -193,7 +223,7 @@ def _verify_document(
             _match(
                 "unsupported_material_is_accounted_for",
                 {
-                    "records": unsupported_record_count,
+                    "records": parsed_unsupported_record_count,
                     "blocks": unsupported_block_count,
                 },
                 {
@@ -227,7 +257,7 @@ def _verify_document(
         findings.append(
             _match(
                 "unsupported_source_record_is_omitted",
-                unsupported_record_count,
+                parsed_unsupported_record_count,
                 fidelity.get("unsupported_source_records"),
                 "OMITTED",
                 "fixture includes intentionally unsupported records",
@@ -407,12 +437,53 @@ def _read_source(path: Path) -> list[dict[str, Any]]:
         try:
             value = json.loads(line)
         except json.JSONDecodeError:
-            records.append({"_asb_unsupported_source_record": True})
+            records.append(
+                {
+                    UNSUPPORTED_SOURCE_RECORD_SENTINEL: True,
+                    "_asb_unsupported_source_type": "malformed",
+                }
+            )
             continue
         records.append(
-            value if isinstance(value, dict) else {"_asb_unsupported_source_record": True}
+            value
+            if isinstance(value, dict)
+            else {
+                UNSUPPORTED_SOURCE_RECORD_SENTINEL: True,
+                "_asb_unsupported_source_type": type(value).__name__,
+            }
         )
     return records
+
+
+def _unsupported_source_record_descriptors(
+    records: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Describe parser-level unsupported records while retaining their positions."""
+    descriptors: list[dict[str, Any]] = []
+    for record_number, record in enumerate(records, 1):
+        if record.get(UNSUPPORTED_SOURCE_RECORD_SENTINEL):
+            descriptors.append(
+                {
+                    "record": record_number,
+                    "type": record.get("_asb_unsupported_source_type", "unsupported"),
+                }
+            )
+            continue
+        record_type = record.get("type")
+        if record_type not in {"user", "assistant", "system"}:
+            descriptors.append({"record": record_number, "type": record_type})
+            continue
+        message = record.get("message")
+        if not isinstance(message, dict):
+            descriptor_type = record_type
+            if record.get("subtype"):
+                descriptor_type = f"{record_type}/{record['subtype']}"
+            descriptors.append({"record": record_number, "type": descriptor_type})
+            continue
+        role = message.get("role", record_type)
+        if role not in {"user", "assistant", "system"}:
+            descriptors.append({"record": record_number, "type": record_type})
+    return descriptors
 
 
 def main(argv: list[str] | None = None) -> int:
