@@ -1,0 +1,107 @@
+{
+  "schema_version": "ASB-interoperability-v1",
+  "fixture": "claude-comprehensive.source.jsonl",
+  "source_facts": {
+    "session_id": "synthetic-interoperability-session",
+    "output_step_sequence": ["user", "agent", "agent", "user", "agent"],
+    "output_step_timestamps": [
+      "2026-08-31T12:00:00Z",
+      "2026-08-31T12:00:01Z",
+      "2026-08-31T12:00:03Z",
+      "2026-08-31T12:00:04Z",
+      "2026-08-31T12:00:05Z"
+    ],
+    "output_step_text": [
+      "Inspect the fixture and report the two findings.",
+      "I will inspect the README and repository status.",
+      "The status is clean; I am waiting on the README result.",
+      "Please summarize both results.",
+      "Both checks completed without executing historical commands."
+    ],
+    "tool_calls": [
+      {
+        "id": "call-readme-001",
+        "name": "read_file",
+        "arguments": {
+          "path": "README.md",
+          "include_lines": [1, 3],
+          "credential": "sk-test-THIS_IS_NOT_A_REAL_KEY_123456"
+        }
+      },
+      {
+        "id": "call-status-001",
+        "name": "list_status",
+        "arguments": {"path": ".", "depth": 1}
+      }
+    ],
+    "tool_results": [
+      {
+        "call_id": "call-status-001",
+        "source_record": 4,
+        "normalized_content": "status: clean\nfiles:\n- README.md\n- pyproject.toml\nexit_code: 0\n"
+      },
+      {
+        "call_id": "call-readme-001",
+        "source_record": 6,
+        "normalized_content": "{\"credential\":\"sk-test-THIS_IS_NOT_A_REAL_KEY_123456\",\"files\":[\"README.md\",\"pyproject.toml\"],\"summary\":\"synthetic multiline result\"}"
+      }
+    ],
+    "source_timestamps": [
+      "2026-08-31T11:59:59Z",
+      "2026-08-31T12:00:00Z",
+      "2026-08-31T12:00:01Z",
+      "2026-08-31T12:00:02Z",
+      "2026-08-31T12:00:03Z",
+      "2026-08-31T12:00:04Z",
+      "2026-08-31T12:00:05Z",
+      "2026-08-31T12:00:06Z"
+    ],
+    "ignored_source_fields": [
+      {"record": 2, "field": "debugLabel", "value": "ignored-by-asb"}
+    ],
+    "unsupported_source_records": [
+      {"record": 1, "type": "system/init", "expected_state": "omitted"},
+      {"record": 8, "type": "progress", "expected_state": "omitted"}
+    ],
+    "unsupported_source_blocks": [
+      {"record": 3, "type": "thinking", "expected_state": "degraded"}
+    ]
+  },
+  "asb_policy": {
+    "schema_version": "ATIF-v1.7",
+    "redact_secret_like_values": true,
+    "redaction_sentinel": "[REDACTED]",
+    "redaction_expectations": [
+      {
+        "source_value": "sk-test-THIS_IS_NOT_A_REAL_KEY_123456",
+        "replacement": "[REDACTED]"
+      }
+    ],
+    "omit_workspace_cwd_after_redaction": true,
+    "move_tool_results_to_call_observations": true,
+    "do_not_fabricate_unrepresentable_tool_result_timestamps": true,
+    "expected_fidelity": {
+      "source_records_preserved": 6,
+      "tool_calls_preserved": 2,
+      "observation_results_preserved": 2,
+      "unsupported_source_records": 2,
+      "unsupported_source_blocks": 1,
+      "orphaned_tool_results": 0
+    }
+  },
+  "comparison_policy": {
+    "normative": [
+      "source roles, text, tool names, structured arguments, IDs, and call/result identity",
+      "source timestamps on emitted ATIF steps",
+      "unsupported source material must not be reported as preserved"
+    ],
+    "implementation_defined": [
+      "generated metadata and serialization formatting",
+      "secret-redaction defaults for peer implementations",
+      "whether result-only source records become standalone user steps"
+    ],
+    "atif_limitation": [
+      "ATIF-v1.7 ObservationResult has no timestamp field, so tool-result timestamps are not copied into observations"
+    ]
+  }
+}
