@@ -18,12 +18,14 @@ class Finding:
     detail: str
 
     def as_dict(self) -> dict[str, str]:
+        """Return the finding in the stable JSON-report shape."""
         return {"name": self.name, "state": self.state, "detail": self.detail}
 
 
 def verify_files(
     source_path: Path, output_path: Path, oracle_path: Path, *, implementation: str = "asb"
 ) -> dict[str, Any]:
+    """Compare one candidate artifact with the source fixture and semantic oracle."""
     oracle = _read_json(oracle_path)
     source_records = _read_source(source_path)
     output_document = _read_json(output_path)
@@ -50,6 +52,7 @@ def _verify_document(
     oracle: dict[str, Any],
     implementation: str,
 ) -> list[Finding]:
+    """Run source, ATIF, fidelity, and implementation-specific comparisons."""
     findings: list[Finding] = []
     try:
         trajectory = Trajectory.model_validate(output_document)
@@ -220,17 +223,24 @@ def _verify_document(
             "Source result timestamps are known but ATIF-v1.7 ObservationResult has no timestamp field; no timestamp was fabricated.",
         )
     )
-    findings.append(
-        _match(
-            "unsupported_source_record_is_omitted",
-            unsupported_record_count,
-            fidelity.get("unsupported_source_records")
-            if implementation == "asb"
-            else unsupported_record_count,
-            "OMITTED",
-            "fixture includes intentionally unsupported records",
+    if implementation == "asb":
+        findings.append(
+            _match(
+                "unsupported_source_record_is_omitted",
+                unsupported_record_count,
+                fidelity.get("unsupported_source_records"),
+                "OMITTED",
+                "fixture includes intentionally unsupported records",
+            )
         )
-    )
+    else:
+        findings.append(
+            Finding(
+                "unsupported_source_record_is_omitted",
+                "NOT_APPLICABLE",
+                "Peer implementations do not report an ASB fidelity record count.",
+            )
+        )
     return findings
 
 
@@ -245,6 +255,7 @@ def _match(
     report_expected: Any | None = None,
     report_actual: Any | None = None,
 ) -> Finding:
+    """Compare values and redact configured fixture secrets in report diagnostics."""
     if canonical:
         expected = _canonical(expected)
         actual = _canonical(actual)
@@ -267,6 +278,7 @@ def _match_result_map(
     implementation: str,
     oracle: dict[str, Any],
 ) -> Finding:
+    """Compare call-correlated result content with peer serialization normalization."""
     if implementation != "asb":
         expected = {
             call_id: _canonical_result(value) for call_id, value in expected.items()
@@ -286,6 +298,7 @@ def _match_result_map(
 
 
 def _canonical_result(value: Any) -> Any:
+    """Normalize JSON result strings and harmless line-ending whitespace."""
     if isinstance(value, list):
         return [_canonical_result(item) for item in value]
     if not isinstance(value, str):
@@ -300,6 +313,7 @@ def _canonical_result(value: Any) -> Any:
 
 
 def _redaction_finding(output_document: dict[str, Any], oracle: dict[str, Any]) -> Finding:
+    """Ensure configured source secrets and workspace paths do not survive ASB redaction."""
     serialized = json.dumps(output_document, ensure_ascii=False, sort_keys=True)
     expectations = oracle["asb_policy"]["redaction_expectations"]
     sentinel = oracle["asb_policy"]["redaction_sentinel"]
@@ -316,6 +330,7 @@ def _redaction_finding(output_document: dict[str, Any], oracle: dict[str, Any]) 
 
 
 def _apply_redaction_policy(value: Any, oracle: dict[str, Any]) -> Any:
+    """Apply the oracle's deterministic replacement policy to nested values."""
     expectations = oracle["asb_policy"]["redaction_expectations"]
     if isinstance(value, str):
         for expectation in expectations:
@@ -331,6 +346,7 @@ def _apply_redaction_policy(value: Any, oracle: dict[str, Any]) -> Any:
 
 
 def _session_finding(actual: str | None, expected: str) -> Finding:
+    """Compare the candidate session identifier with the source-grounded expectation."""
     return _match("session_identity", expected, actual, "PRESERVED", "source session ID")
 
 
@@ -339,6 +355,7 @@ def _ignored_field_finding(
     source_records: list[dict[str, Any]],
     source_facts: dict[str, Any],
 ) -> Finding:
+    """Verify an ignored provider field matches its indexed source record and stays omitted."""
     ignored = source_facts["ignored_source_fields"][0]
     serialized = json.dumps(output_document, ensure_ascii=False)
     if ignored["value"] in serialized:
@@ -349,10 +366,12 @@ def _ignored_field_finding(
 
 
 def _fidelity(document: dict[str, Any]) -> dict[str, Any]:
+    """Return the optional ASB fidelity extension or an empty report."""
     return document.get("extra", {}).get("agent_session_bridge", {}).get("fidelity", {})
 
 
 def _content_blocks(record: dict[str, Any], role: str) -> list[dict[str, Any]]:
+    """Return dictionary content blocks for a source record with the requested role."""
     message = record.get("message")
     if not isinstance(message, dict) or message.get("role", record.get("type")) != role:
         return []
@@ -363,6 +382,7 @@ def _content_blocks(record: dict[str, Any], role: str) -> list[dict[str, Any]]:
 
 
 def _canonical(value: Any) -> Any:
+    """Recursively sort mapping keys while preserving list order and scalar values."""
     if isinstance(value, dict):
         return {key: _canonical(value[key]) for key in sorted(value)}
     if isinstance(value, list):
@@ -371,6 +391,7 @@ def _canonical(value: Any) -> Any:
 
 
 def _read_json(path: Path) -> dict[str, Any]:
+    """Read and validate a JSON object used as an oracle or candidate document."""
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
         raise TypeError(f"{path} must contain a JSON object")
@@ -378,16 +399,24 @@ def _read_json(path: Path) -> dict[str, Any]:
 
 
 def _read_source(path: Path) -> list[dict[str, Any]]:
+    """Read non-empty JSONL lines without losing their physical source positions."""
     records: list[dict[str, Any]] = []
     for line in path.read_text(encoding="utf-8").splitlines():
-        if line.strip():
+        if not line.strip():
+            continue
+        try:
             value = json.loads(line)
-            if isinstance(value, dict):
-                records.append(value)
+        except json.JSONDecodeError:
+            records.append({"_asb_unsupported_source_record": True})
+            continue
+        records.append(
+            value if isinstance(value, dict) else {"_asb_unsupported_source_record": True}
+        )
     return records
 
 
 def main(argv: list[str] | None = None) -> int:
+    """Run the semantic verifier CLI and return a conflict-sensitive exit code."""
     parser = argparse.ArgumentParser(description="Verify ASB semantic interoperability fixtures")
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)

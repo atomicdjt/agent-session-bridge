@@ -8,6 +8,7 @@ from security.redact import redact_trajectory
 
 
 def main() -> int:
+    """Parse, redact, and write one reproducible ASB ATIF artifact."""
     parser = argparse.ArgumentParser(description="Reproduce an ASB ATIF fixture artifact")
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)

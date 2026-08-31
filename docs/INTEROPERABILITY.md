@@ -6,7 +6,7 @@ The purpose of this corpus is not to prove that Agent Session Bridge is correct;
 
 ## Contents
 
-- `fixtures/interoperability/claude-comprehensive.source.jsonl` is the canonical synthetic Claude Code-shaped source. It contains ordinary text, two tool calls in one assistant turn, results that arrive out of order and non-adjacently, timestamps, structured arguments/results, one unsupported `thinking` block, one unsupported `progress` record, an intentionally ignored debug field, and obviously fake secret-like values.
+- `fixtures/interoperability/claude-comprehensive.source.jsonl` is the canonical synthetic Claude Code-shaped source. It contains ordinary text, two tool calls in one assistant turn, results that arrive out of order and non-adjacently, timestamps, structured arguments/results, one unsupported `thinking` block, two unsupported source records (`system/init` and `progress`), an intentionally ignored debug field, and obviously fake secret-like values.
 - `fixtures/interoperability/expected-semantics.json` is the semantic oracle. It separates source facts, ASB policy, comparison policy, and ATIF limitations. It does not require generated metadata or JSON serialization to match.
 - `src/interoperability/verifier.py` validates ATIF structure and classifies semantic checks as `PRESERVED`, `NORMALIZED`, `DEGRADED`, `OMITTED`, `CONFLICT`, or `NOT_APPLICABLE`.
 - `tests/test_interoperability_verifier.py` tests the verifier itself with adversarial mutations.
