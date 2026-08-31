@@ -54,4 +54,8 @@ jobs:
         MYPYPATH: src
     - name: Test with pytest
       run: pytest
+    - name: Verify semantic interoperability corpus
+      run: |
+        python -m interoperability.reproduce --source fixtures/interoperability/claude-comprehensive.source.jsonl --output "${{ runner.temp }}/claude-comprehensive.atif.json"
+        python -m interoperability.verifier --source fixtures/interoperability/claude-comprehensive.source.jsonl --output "${{ runner.temp }}/claude-comprehensive.atif.json" --oracle fixtures/interoperability/expected-semantics.json
 
