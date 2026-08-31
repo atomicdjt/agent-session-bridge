@@ -7,7 +7,7 @@
 Agent Session Bridge is an MIT-licensed reference implementation for converting supported coding-agent transcripts into the [Agent Trajectory Interchange Format (ATIF)](https://github.com/harbor-framework/harbor/blob/main/rfcs/0001-trajectory-format.md). It is not a competing interchange standard.
 
 > **Current status:** Claude Code JSONL normalization to ATIF v1.7, heuristic secret redaction, ASB fidelity reporting, and an Antigravity derived-log mapping are implemented. Native Antigravity session rehydration is not supported because Antigravity has no supported historical-session import boundary.
-
+>
 > **External validation wanted:** sanitized provider fixtures that expose a normalization failure, disagreements with the fidelity report, evidence about additional documented ingestion boundaries, and reproducible cross-provider transformation cases are especially useful. [Open an issue](https://github.com/atomicdjt/agent-session-bridge/issues) with the smallest safe fixture that demonstrates the problem.
 
 ![Agent Session Bridge quick tour](docs/images/agent-session-bridge-quick-tour.gif)
@@ -180,7 +180,7 @@ v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not A
 
 ## Releasing
 
-This project is published to PyPI through GitHub Actions and PyPI Trusted Publishing using OpenID Connect (OIDC). The workflow builds the wheel and source distribution, runs `twine check`, verifies that the release tag matches the project version, and publishes without storing a PyPI API token in this repository.
+This project is published to PyPI through GitHub Actions and PyPI Trusted Publishing using OpenID Connect (OIDC). The workflow builds the wheel and source distribution and runs `twine check`. For tag-triggered releases, it also verifies that the release tag matches the project version before publishing. A manual `workflow_dispatch` does not perform the tag/version check; it publishes the version currently declared in `pyproject.toml`. No PyPI API token is stored in this repository.
 
 The published package is available at:
 
