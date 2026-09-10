@@ -377,3 +377,76 @@ def test_parse_source_time_exact_precision():
     # 5. Boundary testing near datetime.min and datetime.max
     assert parse_source_time("0001-01-01T00:00:00+01:00") == -62135600400000000000
     assert parse_source_time("9999-12-31T23:59:59-01:00") == 253402304399000000000
+
+
+def test_provider_attribute_prioritizes_agent_extra_over_root_extra(memory_exporter):
+    with open("fixtures/claude_sample.atif.json", "r") as f:
+        trajectory = Trajectory.model_validate(json.load(f))
+
+    trajectory.extra["provider"] = "generic-infrastructure-cloud"
+    project_trajectory(trajectory, privacy_mode="metadata-only")
+
+    spans = memory_exporter.get_finished_spans()
+    root = spans[-1]
+    assert root.attributes["agent_session_bridge.provider"] == "anthropic"
+
+    step_spans = [s for s in spans if s.attributes.get("openinference.span.kind") == "AGENT"]
+    assert step_spans[0].attributes["agent_session_bridge.provider"] == "anthropic"
+
+
+def test_errored_tool_result_sets_error_span_status(memory_exporter):
+    from opentelemetry.trace import StatusCode
+
+    with open("fixtures/claude_sample.atif.json", "r") as f:
+        trajectory = Trajectory.model_validate(json.load(f))
+
+    trajectory.steps[1].observation.results[0].extra = {"is_error": True}
+    trajectory.steps[1].observation.results[0].content = "Command failed with exit code 1"
+
+    project_trajectory(trajectory, privacy_mode="full-content")
+
+    spans = memory_exporter.get_finished_spans()
+    tool_spans = [s for s in spans if s.attributes.get("openinference.span.kind") == "TOOL"]
+    assert len(tool_spans) == 1
+    assert tool_spans[0].status.status_code == StatusCode.ERROR
+    assert "Command failed" in (tool_spans[0].status.description or "")
+
+
+def test_tool_span_redacts_sensitive_keys_in_tool_arguments():
+    from atif import ToolCall
+
+    from observability.mapping import get_tool_span_attributes
+
+    call = ToolCall(
+        tool_call_id="call-sec",
+        function_name="authenticate",
+        arguments={
+            "api_key": "raw_secret_key_12345",
+            "password": "super_secret_password",
+            "host": "api.example.com",
+        },
+    )
+
+    attrs = get_tool_span_attributes(call, "s1", privacy_mode="redacted-content")
+    parsed_input = json.loads(attrs["input.value"])
+
+    assert parsed_input["api_key"] == "[REDACTED]"
+    assert parsed_input["password"] == "[REDACTED]"
+    assert parsed_input["host"] == "api.example.com"
+
+
+def test_false_or_string_is_error_does_not_set_error_status(memory_exporter):
+    from opentelemetry.trace import StatusCode
+
+    with open("fixtures/claude_sample.atif.json", "r") as f:
+        trajectory = Trajectory.model_validate(json.load(f))
+
+    trajectory.steps[1].observation.results[0].extra = {"is_error": "false"}
+    trajectory.steps[1].observation.results[0].content = "Success output"
+
+    project_trajectory(trajectory, privacy_mode="full-content")
+
+    spans = memory_exporter.get_finished_spans()
+    tool_spans = [s for s in spans if s.attributes.get("openinference.span.kind") == "TOOL"]
+    assert len(tool_spans) == 1
+    assert tool_spans[0].status.status_code == StatusCode.OK

@@ -1,6 +1,7 @@
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from adapters.antigravity.exporter import export_with_report
 from adapters.claude.parser import parse_claude_jsonl
@@ -13,8 +14,9 @@ def import_session(args: argparse.Namespace) -> None:
 
     output = trajectory.model_dump_json(indent=2)
     if args.output:
-        with open(args.output, "w", encoding="utf-8") as output_file:
-            output_file.write(output)
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(output, encoding="utf-8")
         print(f"ATIF trajectory written to {args.output}")
     else:
         print(output)
@@ -53,7 +55,14 @@ def convert_session(args: argparse.Namespace) -> None:
             "Antigravity derived-log shape has no evidenced system-message mapping.",
             file=sys.stderr,
         )
-    print(exported.payload)
+    if exported.omitted_content_parts:
+        print(
+            "ASB target-mapping warning: omitted "
+            f"{exported.omitted_content_parts} non-text content part(s) because the observed "
+            "Antigravity derived-log shape only supports text content.",
+            file=sys.stderr,
+        )
+    print(exported.payload, end="")
 
 
 def handoff_session(args: argparse.Namespace) -> None:

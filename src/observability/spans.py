@@ -59,9 +59,11 @@ def project_trajectory(trajectory: Trajectory, privacy_mode: str = "metadata-onl
 
     root_span.set_attribute("openinference.span.kind", "CHAIN")
 
-    provider = trajectory.extra.get("provider") if trajectory.extra else None
-    if not provider and trajectory.agent and trajectory.agent.extra:
+    provider = None
+    if trajectory.agent and trajectory.agent.extra:
         provider = trajectory.agent.extra.get("provider")
+    if not provider and trajectory.extra:
+        provider = trajectory.extra.get("provider")
     if provider:
         root_span.set_attribute("agent_session_bridge.provider", provider)
 
@@ -122,10 +124,25 @@ def project_trajectory(trajectory: Trajectory, privacy_mode: str = "metadata-onl
 
                         # Look for correlated observation result
                         result_str = None
+                        is_error = False
 
                         if step.observation and step.observation.results:
                             for res in step.observation.results:
                                 if res.source_call_id == tool_call.tool_call_id:
+                                    is_error_val = res.extra.get("is_error") if res.extra else None
+                                    if (
+                                        is_error_val is True
+                                        or (
+                                            isinstance(is_error_val, str)
+                                            and is_error_val.strip().lower() in ("true", "1")
+                                        )
+                                        or (
+                                            isinstance(is_error_val, int)
+                                            and is_error_val == 1
+                                            and not isinstance(is_error_val, bool)
+                                        )
+                                    ):
+                                        is_error = True
                                     # We don't have a specific status code enum in basic ATIF,
                                     # but we assume success if a result is present, or parse from extra.
                                     if (
@@ -153,7 +170,12 @@ def project_trajectory(trajectory: Trajectory, privacy_mode: str = "metadata-onl
                             "agent_session_bridge.timestamp.provenance", "SOURCE_OBSERVED"
                         )
 
-                        tool_span.set_status(Status(StatusCode.OK))
+                        if is_error:
+                            tool_span.set_status(
+                                Status(StatusCode.ERROR, description=result_str or "Tool execution error")
+                            )
+                        else:
+                            tool_span.set_status(Status(StatusCode.OK))
 
                         tool_span.end(end_time=tool_end)
                 finally:

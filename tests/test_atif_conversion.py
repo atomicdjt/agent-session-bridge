@@ -7,6 +7,7 @@ from pathlib import Path
 from atif import (
     Agent,
     ContentPart,
+    ImageSource,
     Observation,
     ObservationResult,
     Step,
@@ -491,3 +492,162 @@ def test_parser_serializes_structured_tool_results_deterministically():
     trajectory = parse_claude_jsonl(source)
 
     assert trajectory.steps[0].observation.results[0].content == '{"a":1,"z":2}'
+
+
+def test_parser_preserves_json_array_tool_results():
+    """Fails if tool outputs returning JSON arrays are dropped or treated as empty text."""
+    source = StringIO(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "type": "assistant",
+                        "sessionId": "array-result",
+                        "message": {
+                            "role": "assistant",
+                            "content": [
+                                {
+                                    "type": "tool_use",
+                                    "id": "call-1",
+                                    "name": "list_files",
+                                    "input": {},
+                                }
+                            ],
+                        },
+                    }
+                ),
+                json.dumps(
+                    {
+                        "type": "user",
+                        "sessionId": "array-result",
+                        "message": {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "tool_result",
+                                    "tool_use_id": "call-1",
+                                    "content": ["file1.txt", "file2.py"],
+                                }
+                            ],
+                        },
+                    }
+                ),
+            ]
+        )
+    )
+
+    trajectory = parse_claude_jsonl(source)
+
+    step = trajectory.steps[0]
+    fidelity = trajectory.extra["agent_session_bridge"]["fidelity"]
+    assert step.observation is not None
+    assert step.observation.results[0].content == '["file1.txt","file2.py"]'
+    assert fidelity["unsupported_source_blocks"] == 0
+    assert fidelity["observation_results_preserved"] == 1
+
+
+def test_antigravity_export_handles_multimodal_content_parts():
+    """Fails if ContentPart messages or observation results crash JSON serialization."""
+    trajectory = Trajectory(
+        schema_version="ATIF-v1.7",
+        agent=Agent(name="fixture-agent", version="1.0"),
+        steps=[
+            Step(
+                step_id=1,
+                source="user",
+                message=[
+                    ContentPart(type="text", text="Inspect the repository."),
+                    ContentPart(
+                        type="image",
+                        source=ImageSource(media_type="image/png", path="diagram.png"),
+                    ),
+                ],
+            ),
+            Step(
+                step_id=2,
+                source="agent",
+                message=[ContentPart(type="text", text="Running tool.")],
+                tool_calls=[ToolCall(tool_call_id="c1", function_name="status", arguments={})],
+                observation=Observation(
+                    results=[
+                        ObservationResult(
+                            source_call_id="c1",
+                            content=[ContentPart(type="text", text="clean working tree")],
+                        )
+                    ]
+                ),
+            ),
+        ],
+    )
+
+    report = export_with_report(trajectory)
+    exported = report.payload
+    lines = [json.loads(line) for line in exported.splitlines() if line.strip()]
+
+    assert len(lines) == 3
+    assert lines[0]["content"] == "Inspect the repository."
+    assert lines[1]["content"] == "Running tool."
+    assert lines[2]["type"] == "TOOL_RESPONSE"
+    assert lines[2]["content"] == "clean working tree"
+    assert report.omitted_content_parts == 1
+
+
+def test_parser_does_not_falsely_claim_transformation_when_all_tool_results_are_orphaned():
+    """Fails if transformations list claims tool results were moved when 0 were attached."""
+    source = StringIO(
+        "\n".join(
+            [
+                json.dumps(
+                    {
+                        "type": "user",
+                        "sessionId": "orphaned-only",
+                        "message": {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "tool_result",
+                                    "tool_use_id": "call-does-not-exist",
+                                    "content": "orphan content",
+                                }
+                            ],
+                        },
+                    }
+                )
+            ]
+        )
+    )
+
+    trajectory = parse_claude_jsonl(source)
+    fidelity = trajectory.extra["agent_session_bridge"]["fidelity"]
+
+    assert fidelity["orphaned_tool_results"] == 1
+    assert fidelity["observation_results_preserved"] == 0
+    assert "Moved Claude Code tool_result blocks to call-correlated ATIF observations." not in fidelity["transformations"]
+
+
+def test_cli_import_creates_missing_parent_directories(tmp_path: Path):
+    """Fails if --output to a non-existent parent directory fails with FileNotFoundError."""
+    output = tmp_path / "nested" / "subfolder" / "trajectory.atif.json"
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "cli.main",
+            "import",
+            "--from",
+            "claude-code",
+            "--source",
+            str(FIXTURE),
+            "--output",
+            str(output),
+        ],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    assert output.exists()
+    written = Trajectory.model_validate_json(output.read_text(encoding="utf-8"))
+    assert written.schema_version == "ATIF-v1.7"
+    assert "ATIF trajectory written to" in completed.stdout
