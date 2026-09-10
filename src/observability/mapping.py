@@ -46,10 +46,10 @@ def get_openinference_span_attributes(
     attributes["agent_session_bridge.step_id"] = step.step_id
 
     # Provider and agent info
-    if trajectory.extra and "provider" in trajectory.extra:
-        attributes["agent_session_bridge.provider"] = trajectory.extra["provider"]
-    elif trajectory.agent and trajectory.agent.extra and "provider" in trajectory.agent.extra:
+    if trajectory.agent and trajectory.agent.extra and "provider" in trajectory.agent.extra:
         attributes["agent_session_bridge.provider"] = trajectory.agent.extra["provider"]
+    elif trajectory.extra and "provider" in trajectory.extra:
+        attributes["agent_session_bridge.provider"] = trajectory.extra["provider"]
 
     if trajectory.agent and trajectory.agent.name:
         attributes["agent_session_bridge.agent"] = trajectory.agent.name

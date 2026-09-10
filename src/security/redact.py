@@ -5,7 +5,17 @@ from typing import Any
 
 from atif import ContentPart, Trajectory
 
+SENSITIVE_KEY_PATTERN = re.compile(
+    r'(?i)\b(api[_\.\-]?key|secret[_\.\-]?key|access[_\.\-]?token|auth[_\.\-]?token|password|passwd|authorization|bearer|private[_\.\-]?key|credential)\b'
+)
+
 SECRET_PATTERNS = [
+    (
+        re.compile(
+            r'(?i)(["\'])(api[_\.\-]?key|secret[_\.\-]?key|access[_\.\-]?token|auth[_\.\-]?token|password|passwd|authorization|bearer|credential)\1(\s*:\s*)["\'][^"\']{8,}["\']'
+        ),
+        r'\1\2\1\3"[REDACTED]"',
+    ),
     (
         re.compile(
             r'(?i)(api[_-]?key|secret[_-]?key|access[_-]?token|password)\s*[:=]\s*["\'][a-zA-Z0-9_\-\.]{10,}["\']'
@@ -56,7 +66,16 @@ def _redact_value(value: Any) -> Any:
     if isinstance(value, list):
         return [_redact_value(item) for item in value]
     if isinstance(value, dict):
-        return {key: _redact_value(item) for key, item in value.items()}
+        result: dict[str, Any] = {}
+        for key, item in value.items():
+            if isinstance(key, str) and SENSITIVE_KEY_PATTERN.search(key):
+                if isinstance(item, (dict, list)):
+                    result[key] = _redact_value(item)
+                else:
+                    result[key] = "[REDACTED]"
+            else:
+                result[key] = _redact_value(item)
+        return result
     return value
 
 
