@@ -87,7 +87,7 @@ def parse_claude_jsonl(file_stream: TextIO) -> Trajectory:
                         message=content,
                     )
                 )
-            if tool_results:
+            if tool_results and fidelity.observation_results_preserved > 0:
                 normalized_tool_results = True
 
         fidelity.source_records_preserved += 1
@@ -183,15 +183,25 @@ def _tool_result_text(value: Any, fidelity: FidelityReport) -> str:
     if isinstance(value, str):
         return value
     if isinstance(value, list):
-        text_parts: list[str] = []
-        for block in value:
-            if isinstance(block, dict) and block.get("type") == "text":
-                text = block.get("text")
-                if isinstance(text, str):
-                    text_parts.append(text)
-                    continue
-            fidelity.unsupported_source_blocks += 1
-        return "".join(text_parts)
+        is_claude_content_blocks = (
+            len(value) > 0
+            and all(isinstance(block, dict) and "type" in block for block in value)
+            and any(
+                (block.get("type") == "text" and isinstance(block.get("text"), str))
+                or (block.get("type") == "image" and isinstance(block.get("source"), dict))
+                for block in value
+            )
+        )
+        if is_claude_content_blocks:
+            text_parts: list[str] = []
+            for block in value:
+                if isinstance(block, dict) and block.get("type") == "text":
+                    text = block.get("text")
+                    if isinstance(text, str):
+                        text_parts.append(text)
+                        continue
+                fidelity.unsupported_source_blocks += 1
+            return "".join(text_parts)
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
 
 
