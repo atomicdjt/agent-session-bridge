@@ -1,5 +1,7 @@
 # Agent Session Bridge
 
+[![CI](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml)
+
 **Move structured coding-agent history between tools without collapsing it into a prose summary.**
 
 **[Canonical project page](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [PyPI](https://pypi.org/project/atomicdjt-agent-session-bridge/) · [Open issues](https://github.com/atomicdjt/agent-session-bridge/issues) · [Architecture](docs/ARCHITECTURE.md)**
