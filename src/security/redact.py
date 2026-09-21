@@ -5,40 +5,97 @@ from typing import Any
 
 from atif import ContentPart, Trajectory
 
-SENSITIVE_KEY_PATTERN = re.compile(
-    r'(?i)\b(api[_\.\-]?key|secret[_\.\-]?key|access[_\.\-]?token|auth[_\.\-]?token|password|passwd|authorization|bearer|private[_\.\-]?key|credential)\b'
+_SEP = r"[_.\-]?"
+# Credential-bearing name endings. A name is matched when it *ends* with one of
+# these (``OPENAI_API_KEY``, ``client_secret``), so ``credential_type``,
+# ``max_tokens`` and ``tokenizer`` stay visible. ``\b`` cannot be used here
+# because ``_`` is a word character.
+_KEY_TERMS = (
+    rf"api{_SEP}key|access{_SEP}key|secret{_SEP}key|private{_SEP}key"
+    r"|secret|token|password|passwd|credentials?"
 )
+# A bounded lazy prefix plus a start lookbehind keeps matching linear on long words.
+_KEY = rf"(?<![\w.\-])[\w.\-]{{0,40}}?(?:{_KEY_TERMS})"
+_JSON_KEY = rf"(?:{_KEY}|authorization|bearer)"
+
+SENSITIVE_KEY_PATTERN = re.compile(rf"(?i)(?:{_KEY_TERMS}|authorization|bearer|cookie)$")
+
+# Characters that end an unquoted value in shell, URL, and JSON-ish text. The
+# backslash is excluded so a JSON-escaped closing quote (\") is left intact.
+_STOP = r"\s\"'\\`;&|<>(){}\[\],"
+_UNQUOTED_VALUE = rf"[^{_STOP}$][^{_STOP}]{{9,}}"
+_HEADER_VALUE = r"[^\s\"'\\]{8,}"
 
 SECRET_PATTERNS = [
+    # Private key blocks; an unterminated block is redacted to the end of the text.
     (
         re.compile(
-            r'(?i)(["\'])(api[_\.\-]?key|secret[_\.\-]?key|access[_\.\-]?token|auth[_\.\-]?token|password|passwd|authorization|bearer|credential)\1(\s*:\s*)["\'][^"\']{8,}["\']'
+            r"(?s)-----BEGIN [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----"
+            r".*?(?:-----END [A-Z0-9 ]*PRIVATE KEY(?: BLOCK)?-----|\Z)"
         ),
-        r'\1\2\1\3"[REDACTED]"',
-    ),
-    (
-        re.compile(
-            r'(?i)(api[_-]?key|secret[_-]?key|access[_-]?token|password)\s*[:=]\s*["\'][a-zA-Z0-9_\-\.]{10,}["\']'
-        ),
-        r'\1 = "[REDACTED]"',
-    ),
-    (
-        re.compile(
-            r'(?i)\b(api[_-]?key|secret[_-]?key|access[_-]?token|password|token)'
-            r'\s*[:=]\s*[a-zA-Z0-9][a-zA-Z0-9_./+=-]{9,}'
-        ),
-        r'\1 = "[REDACTED]"',
-    ),
-    (
-        re.compile(r'(?i)\b(Bearer)\s+[a-zA-Z0-9._~+/=-]{10,}'),
-        r'\1 [REDACTED]',
-    ),
-    (
-        re.compile(r'(?i)\b(?:gh[pousr]_|github_pat_)[a-zA-Z0-9_]{10,}'),
         "[REDACTED]",
     ),
-    (re.compile(r'\bsk-[a-zA-Z0-9_-]{10,}'), "[REDACTED]"),
+    # JSON/dict-style pairs: "api_key": "value"
+    (
+        re.compile(rf'(?i)(["\'])({_JSON_KEY})\1(\s*:\s*)["\'][^"\']{{8,}}["\']'),
+        r'\1\2\1\3"[REDACTED]"',
+    ),
+    # The same pair after one level of JSON string escaping: \"api_key\": \"value\"
+    (
+        re.compile(rf'(?i)(\\")({_JSON_KEY})\\"(\s*:\s*)\\"[^"\\]{{8,}}\\"'),
+        r'\1\2\\"\3\\"[REDACTED]\\"',
+    ),
+    # KEY=value / KEY: value with a quoted or bare value.
+    (
+        re.compile(rf'(?i)({_KEY})\s*[:=]\s*["\'][^"\'\s]{{10,}}["\']'),
+        r'\1 = "[REDACTED]"',
+    ),
+    (
+        re.compile(rf"(?i)({_KEY})\s*[:=]\s*{_UNQUOTED_VALUE}"),
+        r'\1 = "[REDACTED]"',
+    ),
+    # HTTP credential headers; any auth scheme (Bearer, Basic, token, ...).
+    (
+        re.compile(rf"(?i)\b(authorization\s*:\s*(?:[a-z][a-z0-9_-]*\s+)?){_HEADER_VALUE}"),
+        r"\1[REDACTED]",
+    ),
+    (
+        re.compile(r"(?i)\b((?:set-)?cookie\s*:\s*)[^\"'\\\r\n]{8,}"),
+        r"\1[REDACTED]",
+    ),
+    (
+        re.compile(r"(?i)\b(Bearer)\s+[a-zA-Z0-9._~+/=-]{10,}"),
+        r"\1 [REDACTED]",
+    ),
+    # CLI flags whose value is a separate argument: --token VALUE, --api-key "VALUE"
+    (
+        re.compile(
+            r"(?i)(?<![\w-])(--(?:[a-z0-9]+-)*"
+            r"(?:api-?key|access-?key|secret-?key|private-?key|secret|token|password|passwd|credentials?)"
+            r"\s+)(?:([\"'])[^\"'\\\r\n]{8,}\2|(?![-$\"'])[^\s\"'\\]{8,})"
+        ),
+        r"\1[REDACTED]",
+    ),
+    # Credentials embedded in a URL (scheme://user:secret@host) or `curl -u user:secret`.
+    (
+        re.compile(r"(://[^\s/:@\"'<>]+:)[^\s/@\"'<>]{3,}(@)"),
+        r"\1[REDACTED]\2",
+    ),
+    (
+        re.compile(
+            r"(?i)(\bcurl\b[^\r\n]{0,200}?\s(?:-u|--user)(?:\s+|=)[\"']?[^\s:\"']+:)[^\s\"'\\]+"
+        ),
+        r"\1[REDACTED]",
+    ),
+    # Well-known credential shapes.
+    (
+        re.compile(r"(?i)\b(?:gh[pousr]_|github_pat_)[a-zA-Z0-9_]{10,}"),
+        "[REDACTED]",
+    ),
+    (re.compile(r"\bsk-[a-zA-Z0-9_-]{10,}"), "[REDACTED]"),
     (re.compile(r"xox[baprs]-[0-9a-zA-Z]{10,}"), "xox?-***REDACTED***"),
+    (re.compile(r"\b(?:AKIA|ASIA)[0-9A-Z]{16}\b"), "[REDACTED]"),
+    (re.compile(r"\beyJ[\w-]{5,}\.[\w-]{5,}\.[\w-]{5,}"), "[REDACTED]"),
 ]
 
 
@@ -71,6 +128,8 @@ def _redact_value(value: Any) -> Any:
             if isinstance(key, str) and SENSITIVE_KEY_PATTERN.search(key):
                 if isinstance(item, (dict, list)):
                     result[key] = _redact_value(item)
+                elif item is None or isinstance(item, bool):
+                    result[key] = item
                 else:
                     result[key] = "[REDACTED]"
             else:
