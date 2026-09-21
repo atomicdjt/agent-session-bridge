@@ -60,7 +60,7 @@ def parse_claude_jsonl(file_stream: TextIO) -> Trajectory:
             fidelity.unsupported_source_records += 1
             continue
 
-        timestamp = record.get("timestamp") or None
+        timestamp = _step_timestamp(record.get("timestamp"), fidelity)
         content, tool_calls, tool_results = _parse_content_blocks(
             message.get("content", []), role, fidelity
         )
@@ -77,7 +77,9 @@ def parse_claude_jsonl(file_stream: TextIO) -> Trajectory:
             for tool_call in tool_calls:
                 tool_call_steps[tool_call.tool_call_id] = step
         else:
-            _attach_tool_results(tool_results, tool_call_steps, fidelity)
+            _attach_tool_results(
+                tool_results, tool_call_steps, fidelity, timestamp is not None
+            )
             if content or not tool_results:
                 steps.append(
                     Step(
@@ -116,6 +118,25 @@ def parse_claude_jsonl(file_stream: TextIO) -> Trajectory:
     )
 
 
+def _step_timestamp(value: Any, fidelity: FidelityReport) -> str | None:
+    """Return a source timestamp ATIF can carry, or ``None`` without inventing one.
+
+    An absent timestamp is not a loss. A present value that ATIF's ISO 8601
+    validation would reject is omitted and counted instead of aborting the import.
+    """
+    if value is None or value == "":
+        return None
+    if isinstance(value, str):
+        try:
+            datetime.fromisoformat(value)
+        except ValueError:
+            pass
+        else:
+            return value
+    fidelity.invalid_source_timestamps += 1
+    return None
+
+
 def _parse_content_blocks(
     content_blocks: Any, role: str, fidelity: FidelityReport
 ) -> tuple[str, list[ToolCall], list[ObservationResult]]:
@@ -134,16 +155,23 @@ def _parse_content_blocks(
             continue
         block_type = block.get("type")
         if block_type == "text":
-            text_parts.append(str(block.get("text", "")))
+            text = block.get("text")
+            if not isinstance(text, str):
+                fidelity.unsupported_source_blocks += 1
+                continue
+            text_parts.append(text)
         elif block_type == "tool_use":
             if role != "assistant":
                 fidelity.unsupported_source_blocks += 1
                 continue
             call_id = block.get("id")
+            name = block.get("name")
             arguments = block.get("input", {})
             if (
                 not isinstance(call_id, str)
                 or not call_id.strip()
+                or not isinstance(name, str)
+                or not name.strip()
                 or not isinstance(arguments, dict)
             ):
                 fidelity.unsupported_source_blocks += 1
@@ -151,7 +179,7 @@ def _parse_content_blocks(
             tool_calls.append(
                 ToolCall(
                     tool_call_id=call_id,
-                    function_name=str(block.get("name", "")),
+                    function_name=name,
                     arguments=arguments,
                 )
             )
@@ -169,9 +197,7 @@ def _parse_content_blocks(
                         else None
                     ),
                     content=_tool_result_text(block.get("content", ""), fidelity),
-                    extra={"is_error": bool(block.get("is_error"))}
-                    if block.get("is_error")
-                    else None,
+                    extra={"is_error": block["is_error"]} if block.get("is_error") else None,
                 )
             )
         else:
@@ -209,6 +235,7 @@ def _attach_tool_results(
     results: list[ObservationResult],
     tool_call_steps: dict[str, Step],
     fidelity: FidelityReport,
+    record_has_timestamp: bool,
 ) -> None:
     for result in results:
         source_step = (
@@ -221,6 +248,9 @@ def _attach_tool_results(
             source_step.observation = Observation(results=[])
         source_step.observation.results.append(result)
         fidelity.observation_results_preserved += 1
+        if record_has_timestamp:
+            # ATIF v1.7 ObservationResult has no timestamp field; do not invent one.
+            fidelity.omitted_tool_result_timestamps += 1
 
 
 def _workspace_metadata(cwd: str | None, git_branch: str | None) -> dict[str, Any] | None:
