@@ -45,6 +45,12 @@ The current Harbor ATIF implementation at commit `d6514c49e3dc321df46c6653cb3ee8
 
 Decision: do not widen the dependency or migrate the emitted schema in this sprint. The v1.7 behavior is compatible with the current v1.8 reference model for the fields ASB uses, but v1.8's new audio surface needs an intentional source/mapping design and a released dependency before migration. This is compatibility evidence, not a claim of universal ATIF v1.8 support.
 
+## Source positions and timestamp findings
+
+Record numbers in the oracle are 1-based ordinals over the non-blank lines of the source, counted exactly as the parser iterates the file. The verifier reads the source the same way (line iteration, not `str.splitlines()`), so characters such as U+2028 or U+0085 inside a JSON string do not create phantom records.
+
+The `tool_result_timestamps` finding is derived from the source: it counts source tool results whose record carries a timestamp and reports them as `OMITTED` because ATIF v1.7 cannot represent them. For ASB output it additionally requires the fidelity report's `omitted_tool_result_timestamps` to equal that count, so an understated loss is a `CONFLICT`.
+
 ## Comparison model
 
 An independent implementation may serialize different IDs, metadata, extensions, optional fields, or formatting while preserving equivalent trajectory facts. The comparison categories mean:
@@ -54,7 +60,7 @@ An independent implementation may serialize different IDs, metadata, extensions,
 - `DEGRADED`: the source includes material outside the supported representation and the loss is explicitly accounted for.
 - `OMITTED`: the source or field is intentionally not emitted, such as the provider-only debug field or a tool-result timestamp that ATIF v1.7 cannot represent.
 - `CONFLICT`: the candidate output contradicts a source fact or an explicitly tested policy.
-- `NOT_APPLICABLE`: an ASB-specific policy is not imposed on a peer implementation.
+- `NOT_APPLICABLE`: an ASB-specific policy is not imposed on a peer implementation, or the source fixture contains nothing the check could apply to (for example, `tool_result_timestamps` when no source tool result carries a timestamp).
 
 ASB is not the reference authority. The source facts and the ATIF contract are the authority for portable semantics; redaction defaults, extension layout, generated metadata, and result-only-record presentation remain implementation-defined unless the format requires otherwise.
 

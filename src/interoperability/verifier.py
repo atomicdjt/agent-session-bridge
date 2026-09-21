@@ -246,13 +246,7 @@ def _verify_document(
             )
         )
 
-    findings.append(
-        Finding(
-            "tool_result_timestamps",
-            "OMITTED",
-            "Source result timestamps are known but ATIF-v1.7 ObservationResult has no timestamp field; no timestamp was fabricated.",
-        )
-    )
+    findings.append(_tool_result_timestamp_finding(source_records, fidelity, implementation))
     if implementation == "asb":
         findings.append(
             _match(
@@ -272,6 +266,38 @@ def _verify_document(
             )
         )
     return findings
+
+
+def _tool_result_timestamp_finding(
+    source_records: list[dict[str, Any]], fidelity: dict[str, Any], implementation: str
+) -> Finding:
+    """Report source tool-result timestamps that ATIF v1.7 has no field to carry."""
+    timestamped_results = sum(
+        1
+        for record in source_records
+        if record.get("timestamp")
+        for block in _content_blocks(record, "user")
+        if block.get("type") == "tool_result"
+    )
+    if not timestamped_results:
+        return Finding(
+            "tool_result_timestamps",
+            "NOT_APPLICABLE",
+            "The source fixture has no timestamped tool results.",
+        )
+    detail = (
+        f"{timestamped_results} source tool-result timestamp(s) are known but ATIF-v1.7 "
+        "ObservationResult has no timestamp field; none was fabricated."
+    )
+    if implementation == "asb":
+        reported = fidelity.get("omitted_tool_result_timestamps")
+        if reported != timestamped_results:
+            return Finding(
+                "tool_result_timestamps",
+                "CONFLICT",
+                f"{detail} ASB fidelity reports omitted_tool_result_timestamps={reported!r}.",
+            )
+    return Finding("tool_result_timestamps", "OMITTED", detail)
 
 
 def _match(
@@ -431,7 +457,11 @@ def _read_json(path: Path) -> dict[str, Any]:
 def _read_source(path: Path) -> list[dict[str, Any]]:
     """Read non-empty JSONL lines without losing their physical source positions."""
     records: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    # Iterate the file like the parser does; str.splitlines() would also split on
+    # U+2028/U+0085, which are legal inside JSON strings, and shift positions.
+    with path.open(encoding="utf-8") as source_file:
+        lines = list(source_file)
+    for line in lines:
         if not line.strip():
             continue
         try:

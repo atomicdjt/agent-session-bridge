@@ -86,7 +86,9 @@
       "observation_results_preserved": 2,
       "unsupported_source_records": 2,
       "unsupported_source_blocks": 1,
-      "orphaned_tool_results": 0
+      "orphaned_tool_results": 0,
+    "omitted_tool_result_timestamps": 2,
+    "invalid_source_timestamps": 0
     }
   },
   "comparison_policy": {

@@ -14,6 +14,8 @@ class FidelityReport(BaseModel):
     unsupported_source_records: int = 0
     unsupported_source_blocks: int = 0
     orphaned_tool_results: int = 0
+    omitted_tool_result_timestamps: int = 0
+    invalid_source_timestamps: int = 0
     transformations: list[str] = Field(default_factory=list)
 
 
