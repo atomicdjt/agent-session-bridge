@@ -58,7 +58,7 @@ python -m pip install atomicdjt-agent-session-bridge
 To install the current published release explicitly:
 
 ```bash
-python -m pip install atomicdjt-agent-session-bridge==0.2.1
+python -m pip install atomicdjt-agent-session-bridge==0.3.0
 ```
 
 For development from source:
@@ -115,10 +115,10 @@ ATIF makes a trajectory portable; it does not require target runtimes to ingest 
 
 ## Fidelity and security boundaries
 
-For the current Claude Code adapter, ASB preserves supported roles, ISO-8601 timestamps, text, tool names, tool arguments, and tool results. It normalizes later Claude `tool_result` blocks into ATIF observations attached to their originating calls. Unsupported source records or blocks are counted in `extra.agent_session_bridge.fidelity`; they are never represented as successfully preserved.
+For the current Claude Code adapter, ASB preserves supported roles, valid ISO-8601 step timestamps, text, tool names, tool arguments, and tool results. It normalizes later Claude `tool_result` blocks into ATIF observations attached to their originating calls. Unsupported source records or blocks are counted in `extra.agent_session_bridge.fidelity`; they are never represented as successfully preserved. ATIF v1.7 has no timestamp on an observation result, so tool-result timestamps are not carried into the output; they are counted as `omitted_tool_result_timestamps` and no time is ever invented ([details](docs/FORMAT.md#timestamp-semantics)).
 
 - Imported history is processed as data. Historical commands are never executed.
-- Redaction is heuristic and is not a guarantee.
+- Redaction is heuristic and is not a guarantee; see [what it does and does not cover](docs/SECURITY.md#what-redaction-covers).
 - Do not publish a converted transcript without reviewing it for credentials, personal data, private source, or proprietary context.
 - ASB does not reverse-engineer or write Antigravity's opaque internal session database.
 
