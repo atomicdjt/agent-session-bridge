@@ -51,6 +51,44 @@ ASB owns exactly one root extension namespace:
 
 This data explains a conversion; it is not part of the ATIF standard and consumers may ignore it while still accepting the ATIF trajectory.
 
+## Fidelity breakdown
+
+`unsupported_source_records` and `unsupported_source_blocks` remain the totals. The breakdown below says *what* those totals contain, so bookkeeping is not mistaken for content loss, and content loss is not hidden inside a bookkeeping count. All lists are sorted by name so the report is deterministic.
+
+| Field | Meaning |
+| --- | --- |
+| `unsupported_record_types` | Records not converted, as `{type, category, records}`. `system` records are labelled `system/<subtype>`. |
+| `unsupported_block_types` | Content blocks not converted, as `{type, blocks, with_content}`. |
+| `ignored_fields` | Fields present on *converted* records that ATIF has no place for and ASB did not carry (for example `toolUseResult`, `parentUuid`, `message.stop_reason`), as `{field, records}`. Counted per record, not per value. |
+| `synthetic_agent_records` | Agent records whose model is `<synthetic>`: messages the Claude Code client generated (for example an authentication failure), not model output. |
+| `duplicate_usage_records`, `conflicting_usage_records` | See [Model and usage](#model-and-usage). |
+
+**Record categories** come from the field names observed on real Claude Code 2.1.x logs. They are an observation about those logs, not a Claude Code specification:
+
+| Category | Meaning | Types classified this way |
+| --- | --- | --- |
+| `bookkeeping` | No text-bearing field was observed; session metadata only. | `agent-name`, `ai-title`, `atis-latch`, `bridge-session`, `cost-state`, `custom-title`, `file-history-delta`, `file-history-snapshot`, `mode`, `permission-mode`, `pr-link`, `system/turn_duration` |
+| `text_bearing` | Observed with text or content fields, such as context the harness supplied to the model, echoed prompts, or hook output. ASB cannot show that dropping these loses nothing. | `attachment`, `last-prompt`, `queue-operation`, `system/compact_boundary`, `system/local_command`, `system/stop_hook_summary` |
+| `unrecognized` | Not in either list, or malformed. Treated as possible content loss. | everything else |
+
+A `thinking` block counts as `with_content` only when its `thinking` text is non-empty; an empty one holds only an opaque signature. Every other unconverted block type is assumed to carry content, because ASB cannot show otherwise.
+
+## Model and usage
+
+For agent records, `message.model` becomes `Step.model_name`. The `usage` object becomes `Step.metrics` in **tokens** (ATIF v1.7 has no other unit here):
+
+| ATIF v1.7 `Metrics` field | Claude Code `usage` source |
+| --- | --- |
+| `prompt_tokens` | `input_tokens + cache_read_input_tokens + cache_creation_input_tokens` |
+| `cached_tokens` | `cache_read_input_tokens` |
+| `completion_tokens` | `output_tokens` |
+| `extra.uncached_input_tokens`, `extra.cache_creation_input_tokens` | the two source counts that ATIF has no field for |
+| `cost_usd` | never set; Claude Code records carry no per-step cost |
+
+ATIF defines `prompt_tokens` as all input tokens including cached ones, while Anthropic's `input_tokens` excludes cache reads and cache creation, so both are added back. Claude Code writes one record per content block and repeats the response's `usage` on each of them. Metrics are attached only to the first record of each API response (`message.id`), so summing per-step metrics gives the response totals. A later record whose usage is identical counts as `duplicate_usage_records`; one whose usage differs keeps the first record's values and counts as `conflicting_usage_records`. A record with a missing or invalid usage value gets a model name and no metrics. No `final_metrics` are written.
+
+Each step also carries `extra.agent_session_bridge.source_line` (1-based ordinal among the source's non-blank lines, the convention the interoperability oracle uses) and, for agent steps, `source_message_id`.
+
 ## Timestamp semantics
 
 The preservation rule is: preserve when representable, report when not, never fabricate.
