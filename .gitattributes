@@ -1,0 +1,4 @@
+# The real-session manifest pins the SHA-256 of this file's exact bytes. Without this,
+# a checkout with core.autocrlf=true (the Windows default, including CI runners) writes
+# CRLF line endings and the recorded hash no longer matches the file on disk.
+fixtures/real-session/*.jsonl -text

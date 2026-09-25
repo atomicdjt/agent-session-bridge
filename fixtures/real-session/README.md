@@ -6,7 +6,7 @@ This fixture comes from one controlled, real Claude Code 2.1.266 session, not a 
 
 | File | Contents |
 | --- | --- |
-| `claude-code-controlled-demo.source.jsonl` | The sanitized Claude Code JSONL, reduced to an allowlist of fields. Records outside `user`/`assistant`/`system` are type-only skeletons (for example `{"type": "attachment"}`); every other field not on the allowlist is dropped. |
+| `claude-code-controlled-demo.source.jsonl` | The sanitized Claude Code JSONL, reduced to an allowlist of fields. Records outside `user`/`assistant`/`system` are type-only skeletons (for example `{"type": "attachment"}`). On the remaining records, a field not on the allowlist keeps its name but its value is replaced with `"[dropped]"`, so the converter still counts it. |
 | `claude-code-controlled-demo.atif.json` | The ATIF v1.7 trajectory produced by `agent-session import --from claude-code` from that source. |
 | `claude-code-controlled-demo.manifest.json` | Source-level facts ATIF itself does not carry, for use with `agent-session explain --manifest`: the sanitized file's SHA-256, the real Claude Code version, the converter version and commit that produced it, and a capture timestamp. It intentionally does not contain the raw (pre-sanitization) session's hash, path, or any account, organization, or personal identifier. |
 
@@ -18,6 +18,6 @@ This fixture demonstrates the Claude Code adapter path and its explicitly report
 
 ## Provenance and privacy
 
-The source JSONL was produced by an allowlist sanitizer (`tools/private_demo.py`, `tools/trace_sanitizer.py` in this repository) from a private raw session log that is not published and never leaves the machine it ran on. The sanitizer keeps the document's structure — record types, field names, block types, and call/result correlation — so that converting the sanitized file yields the same ASB fidelity counters and step structure as converting the raw file, while dropping every field not needed to demonstrate the converter. Before this fixture was added, the sanitized candidate was scanned for known secret shapes, emails, UUIDs, URLs, and absolute paths, and was reviewed by hand.
+The source JSONL was produced by an allowlist sanitizer (`tools/private_demo.py`, `tools/trace_sanitizer.py` in this repository) from a private raw session log that is not published. The sanitizer keeps the document's structure — record types, field names, block types, and call/result correlation — so that converting the sanitized file yields the same ASB fidelity counters and step structure as converting the raw file, while dropping every field not needed to demonstrate the converter. Before this fixture was added, the sanitized candidate was scanned for known secret shapes, emails, UUIDs, URLs, and absolute paths, and was reviewed by hand.
 
 Do not add real transcripts, credentials, private source, or personal data to this directory.
