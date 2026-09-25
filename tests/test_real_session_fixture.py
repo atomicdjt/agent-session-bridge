@@ -6,6 +6,7 @@ sanitizer before this file was written. See `fixtures/real-session/README.md` an
 `docs/DEMO_REAL_SESSION.md` for what it does and does not demonstrate.
 """
 
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -14,6 +15,7 @@ from atif import Trajectory
 
 from adapters.claude.parser import parse_claude_jsonl
 from explain import load_manifest, render_report
+from security.redact import redact_trajectory
 
 FIXTURE_DIR = Path("fixtures/real-session")
 SOURCE = FIXTURE_DIR / "claude-code-controlled-demo.source.jsonl"
@@ -42,20 +44,22 @@ def test_published_atif_document_validates_as_atif_v1_7():
     assert trajectory.agent.version == "2.1.266"
 
 
-def test_the_published_source_converts_to_the_published_atif_document():
-    with SOURCE.open(encoding="utf-8") as source_file:
-        reconverted = parse_claude_jsonl(source_file)
-    published = _load_atif()
+def test_manifest_hash_matches_the_source_bytes_on_disk():
+    # Guards the .gitattributes rule: a CRLF checkout would silently falsify the manifest.
+    manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+    assert hashlib.sha256(SOURCE.read_bytes()).hexdigest() == manifest["source_sha256"]
 
-    assert reconverted.schema_version == published.schema_version
-    assert len(reconverted.steps) == len(published.steps)
-    assert reconverted.extra is not None and published.extra is not None
-    reconverted_fidelity = reconverted.extra["agent_session_bridge"]["fidelity"]
-    published_fidelity = published.extra["agent_session_bridge"]["fidelity"]
-    volatile = {"transformations"}
-    for key in reconverted_fidelity:
-        if key not in volatile:
-            assert reconverted_fidelity[key] == published_fidelity[key], key
+
+def test_the_published_source_converts_to_the_published_atif_document():
+    # `agent-session import` redacts after parsing, so the comparison does the same. Only
+    # the conversion timestamp may differ; every step, call, result, and count must match.
+    with SOURCE.open(encoding="utf-8") as source_file:
+        reconverted = json.loads(redact_trajectory(parse_claude_jsonl(source_file)).model_dump_json())
+    published = json.loads(ATIF_DOCUMENT.read_text(encoding="utf-8"))
+    for document in (reconverted, published):
+        del document["extra"]["agent_session_bridge"]["provenance"]["conversion_timestamp"]
+
+    assert reconverted == published
 
 
 def test_six_tool_calls_correlate_with_six_results_including_the_missing_file_error():
@@ -70,8 +74,11 @@ def test_six_tool_calls_correlate_with_six_results_including_the_missing_file_er
 
     results_by_call_id: dict[str, list[bool]] = {}
     for step in trajectory.steps:
+        calls_on_step = {call.tool_call_id for call in step.tool_calls or []}
         for result in (step.observation.results if step.observation else []):
             assert result.source_call_id is not None
+            # ATIF correlation is per step: a result must sit on the step that made the call.
+            assert result.source_call_id in calls_on_step, result.source_call_id
             results_by_call_id.setdefault(result.source_call_id, []).append(
                 bool((result.extra or {}).get("is_error"))
             )
