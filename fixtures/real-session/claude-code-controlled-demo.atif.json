@@ -1,0 +1,602 @@
+{
+  "schema_version": "ATIF-v1.7",
+  "session_id": "session-demo",
+  "trajectory_id": null,
+  "agent": {
+    "name": "claude-code",
+    "version": "2.1.266",
+    "model_name": null,
+    "tool_definitions": null,
+    "extra": {
+      "provider": "anthropic"
+    }
+  },
+  "steps": [
+    {
+      "step_id": 1,
+      "timestamp": "2026-09-25T02:29:22.860Z",
+      "source": "user",
+      "model_name": null,
+      "reasoning_effort": null,
+      "message": "You are helping with a small, harmless demo in the current directory. Do these steps in order, one tool call at a time, using exactly the tools named:\n1. Read the file inventory.csv.\n2. Use the Bash tool to compute the total of the quantity column (for example with awk -F, 'NR>1{s+=$2} END{print s}' inventory.csv).\n3. Read the file missing_file.txt (it does not exist; this is an intentional error, do not create it).\n4. Read notes.txt, then use the Edit tool to fix the spelling mistake \"delibrate\" so it reads \"deliberate\".\n5. Use the Write tool to create summary.md containing: the total quantity, and one sentence saying what you fixed.\nFinish with a one-sentence summary of what you did.\n",
+      "reasoning_content": null,
+      "tool_calls": null,
+      "observation": null,
+      "metrics": null,
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 3
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 2,
+      "timestamp": "2026-09-25T02:29:24.533Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "I'll start by reading inventory.csv.",
+      "reasoning_content": null,
+      "tool_calls": null,
+      "observation": null,
+      "metrics": {
+        "prompt_tokens": 15787,
+        "completion_tokens": 82,
+        "cached_tokens": 0,
+        "cost_usd": null,
+        "prompt_token_ids": null,
+        "completion_token_ids": null,
+        "logprobs": null,
+        "extra": {
+          "uncached_input_tokens": 2,
+          "cache_creation_input_tokens": 15785
+        }
+      },
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 16,
+          "source_message_id": "message-0001"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 3,
+      "timestamp": "2026-09-25T02:29:24.816Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "",
+      "reasoning_content": null,
+      "tool_calls": [
+        {
+          "tool_call_id": "tool-call-0001",
+          "function_name": "Read",
+          "arguments": {
+            "file_path": "/workspace\\inventory.csv"
+          },
+          "extra": null
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "tool-call-0001",
+            "content": "1\titem,quantity,unit_price\n2\twidget,4,2.50\n3\tgadget,10,1.25\n4\tsprocket,3,4.00\n5\t",
+            "subagent_trajectory_ref": null,
+            "extra": null
+          }
+        ]
+      },
+      "metrics": null,
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 17,
+          "source_message_id": "message-0001"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 4,
+      "timestamp": "2026-09-25T02:29:26.518Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "Now I'll compute the total quantity.",
+      "reasoning_content": null,
+      "tool_calls": null,
+      "observation": null,
+      "metrics": {
+        "prompt_tokens": 16009,
+        "completion_tokens": 124,
+        "cached_tokens": 15785,
+        "cost_usd": null,
+        "prompt_token_ids": null,
+        "completion_token_ids": null,
+        "logprobs": null,
+        "extra": {
+          "uncached_input_tokens": 2,
+          "cache_creation_input_tokens": 222
+        }
+      },
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 25,
+          "source_message_id": "message-0002"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 5,
+      "timestamp": "2026-09-25T02:29:26.970Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "",
+      "reasoning_content": null,
+      "tool_calls": [
+        {
+          "tool_call_id": "tool-call-0002",
+          "function_name": "Bash",
+          "arguments": {
+            "command": "awk -F, 'NR>1{s+=$2} END{print s}' inventory.csv",
+            "description": "Sum quantity column in inventory.csv"
+          },
+          "extra": null
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "tool-call-0002",
+            "content": "17",
+            "subagent_trajectory_ref": null,
+            "extra": null
+          }
+        ]
+      },
+      "metrics": null,
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 26,
+          "source_message_id": "message-0002"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 6,
+      "timestamp": "2026-09-25T02:29:30.083Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "Total is 17. Now attempting to read missing_file.txt (expected to fail).",
+      "reasoning_content": null,
+      "tool_calls": null,
+      "observation": null,
+      "metrics": {
+        "prompt_tokens": 16223,
+        "completion_tokens": 96,
+        "cached_tokens": 16007,
+        "cost_usd": null,
+        "prompt_token_ids": null,
+        "completion_token_ids": null,
+        "logprobs": null,
+        "extra": {
+          "uncached_input_tokens": 2,
+          "cache_creation_input_tokens": 214
+        }
+      },
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 30,
+          "source_message_id": "message-0003"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 7,
+      "timestamp": "2026-09-25T02:29:30.200Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "",
+      "reasoning_content": null,
+      "tool_calls": [
+        {
+          "tool_call_id": "tool-call-0003",
+          "function_name": "Read",
+          "arguments": {
+            "file_path": "/workspace\\missing_file.txt"
+          },
+          "extra": null
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "tool-call-0003",
+            "content": "File does not exist. Note: your current working directory is /workspace.",
+            "subagent_trajectory_ref": null,
+            "extra": {
+              "is_error": true
+            }
+          }
+        ]
+      },
+      "metrics": null,
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 31,
+          "source_message_id": "message-0003"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 8,
+      "timestamp": "2026-09-25T02:29:31.744Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "As expected, missing_file.txt doesn't exist. Now reading notes.txt.",
+      "reasoning_content": null,
+      "tool_calls": null,
+      "observation": null,
+      "metrics": {
+        "prompt_tokens": 16444,
+        "completion_tokens": 95,
+        "cached_tokens": 16221,
+        "cost_usd": null,
+        "prompt_token_ids": null,
+        "completion_token_ids": null,
+        "logprobs": null,
+        "extra": {
+          "uncached_input_tokens": 2,
+          "cache_creation_input_tokens": 221
+        }
+      },
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 35,
+          "source_message_id": "message-0004"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 9,
+      "timestamp": "2026-09-25T02:29:31.939Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "",
+      "reasoning_content": null,
+      "tool_calls": [
+        {
+          "tool_call_id": "tool-call-0004",
+          "function_name": "Read",
+          "arguments": {
+            "file_path": "/workspace\\notes.txt"
+          },
+          "extra": null
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "tool-call-0004",
+            "content": "1\tAgent Session Bridge demo notes\n2\tThis file contains a delibrate typo for the agent to fix.\n3\tAll data here is synthetic and harmless.\n4\t",
+            "subagent_trajectory_ref": null,
+            "extra": null
+          }
+        ]
+      },
+      "metrics": null,
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 36,
+          "source_message_id": "message-0004"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 10,
+      "timestamp": "2026-09-25T02:29:33.792Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "",
+      "reasoning_content": null,
+      "tool_calls": [
+        {
+          "tool_call_id": "tool-call-0005",
+          "function_name": "Edit",
+          "arguments": {
+            "replace_all": false,
+            "file_path": "/workspace\\notes.txt",
+            "old_string": "delibrate",
+            "new_string": "deliberate"
+          },
+          "extra": null
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "tool-call-0005",
+            "content": "The file /workspace\\notes.txt has been updated successfully. (file state is current in your context — no need to Read it back)",
+            "subagent_trajectory_ref": null,
+            "extra": null
+          }
+        ]
+      },
+      "metrics": {
+        "prompt_tokens": 16682,
+        "completion_tokens": 119,
+        "cached_tokens": 16442,
+        "cost_usd": null,
+        "prompt_token_ids": null,
+        "completion_token_ids": null,
+        "logprobs": null,
+        "extra": {
+          "uncached_input_tokens": 2,
+          "cache_creation_input_tokens": 238
+        }
+      },
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 40,
+          "source_message_id": "message-0005"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 11,
+      "timestamp": "2026-09-25T02:29:35.722Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "",
+      "reasoning_content": null,
+      "tool_calls": [
+        {
+          "tool_call_id": "tool-call-0006",
+          "function_name": "Write",
+          "arguments": {
+            "file_path": "/workspace\\summary.md",
+            "content": "# Summary\n\nTotal quantity: 17\n\nFixed a spelling mistake in notes.txt, correcting \"delibrate\" to \"deliberate\".\n"
+          },
+          "extra": null
+        }
+      ],
+      "observation": {
+        "results": [
+          {
+            "source_call_id": "tool-call-0006",
+            "content": "File created successfully at: /workspace\\summary.md (file state is current in your context — no need to Read it back)",
+            "subagent_trajectory_ref": null,
+            "extra": null
+          }
+        ]
+      },
+      "metrics": {
+        "prompt_tokens": 16936,
+        "completion_tokens": 134,
+        "cached_tokens": 16680,
+        "cost_usd": null,
+        "prompt_token_ids": null,
+        "completion_token_ids": null,
+        "logprobs": null,
+        "extra": {
+          "uncached_input_tokens": 2,
+          "cache_creation_input_tokens": 254
+        }
+      },
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 44,
+          "source_message_id": "message-0006"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    },
+    {
+      "step_id": 12,
+      "timestamp": "2026-09-25T02:29:37.657Z",
+      "source": "agent",
+      "model_name": "claude-sonnet-5",
+      "reasoning_effort": null,
+      "message": "I computed the inventory total (17), confirmed missing_file.txt is absent as expected, fixed the \"delibrate\" → \"deliberate\" typo in notes.txt, and wrote summary.md with the total and a note on the fix.",
+      "reasoning_content": null,
+      "tool_calls": null,
+      "observation": null,
+      "metrics": {
+        "prompt_tokens": 17201,
+        "completion_tokens": 76,
+        "cached_tokens": 16934,
+        "cost_usd": null,
+        "prompt_token_ids": null,
+        "completion_token_ids": null,
+        "logprobs": null,
+        "extra": {
+          "uncached_input_tokens": 2,
+          "cache_creation_input_tokens": 265
+        }
+      },
+      "extra": {
+        "agent_session_bridge": {
+          "source_line": 48,
+          "source_message_id": "message-0007"
+        }
+      },
+      "llm_call_count": null,
+      "is_copied_context": null
+    }
+  ],
+  "notes": null,
+  "final_metrics": null,
+  "continued_trajectory_ref": null,
+  "extra": {
+    "agent_session_bridge": {
+      "provenance": {
+        "original_format": "claude-code-jsonl",
+        "converted_by": "agent-session-bridge",
+        "conversion_timestamp": "2026-09-25T02:29:38.561818+00:00"
+      },
+      "fidelity": {
+        "source_records_preserved": 18,
+        "tool_calls_preserved": 6,
+        "observation_results_preserved": 6,
+        "unsupported_source_records": 31,
+        "unsupported_source_blocks": 0,
+        "orphaned_tool_results": 0,
+        "omitted_tool_result_timestamps": 6,
+        "invalid_source_timestamps": 0,
+        "unsupported_record_types": [
+          {
+            "type": "ai-title",
+            "category": "bookkeeping",
+            "records": 2
+          },
+          {
+            "type": "atis-latch",
+            "category": "bookkeeping",
+            "records": 3
+          },
+          {
+            "type": "attachment",
+            "category": "text_bearing",
+            "records": 21
+          },
+          {
+            "type": "last-prompt",
+            "category": "text_bearing",
+            "records": 3
+          },
+          {
+            "type": "queue-operation",
+            "category": "text_bearing",
+            "records": 2
+          }
+        ],
+        "unsupported_block_types": [],
+        "ignored_fields": [
+          {
+            "field": "apiBlockIndex",
+            "records": 11
+          },
+          {
+            "field": "effort",
+            "records": 11
+          },
+          {
+            "field": "entrypoint",
+            "records": 18
+          },
+          {
+            "field": "isSidechain",
+            "records": 18
+          },
+          {
+            "field": "message.container",
+            "records": 11
+          },
+          {
+            "field": "message.context_management",
+            "records": 11
+          },
+          {
+            "field": "message.diagnostics",
+            "records": 11
+          },
+          {
+            "field": "message.stop_details",
+            "records": 11
+          },
+          {
+            "field": "message.stop_reason",
+            "records": 11
+          },
+          {
+            "field": "message.stop_sequence",
+            "records": 11
+          },
+          {
+            "field": "message.type",
+            "records": 11
+          },
+          {
+            "field": "parentUuid",
+            "records": 18
+          },
+          {
+            "field": "permissionMode",
+            "records": 1
+          },
+          {
+            "field": "promptId",
+            "records": 7
+          },
+          {
+            "field": "promptSource",
+            "records": 1
+          },
+          {
+            "field": "requestId",
+            "records": 11
+          },
+          {
+            "field": "sourceToolAssistantUUID",
+            "records": 6
+          },
+          {
+            "field": "toolUseResult",
+            "records": 6
+          },
+          {
+            "field": "userType",
+            "records": 18
+          },
+          {
+            "field": "uuid",
+            "records": 18
+          },
+          {
+            "field": "wireToolInputs",
+            "records": 6
+          }
+        ],
+        "synthetic_agent_records": 0,
+        "duplicate_usage_records": 4,
+        "conflicting_usage_records": 0,
+        "transformations": [
+          "Moved Claude Code tool_result blocks to call-correlated ATIF observations."
+        ]
+      },
+      "workspace": {
+        "repository": {
+          "branch": "HEAD"
+        }
+      }
+    }
+  },
+  "subagent_trajectories": null
+}

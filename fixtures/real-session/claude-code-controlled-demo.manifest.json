@@ -1,0 +1,7 @@
+{
+  "source_sha256": "0b2d76bf60c371ee643002c9c384ff05963bc092a21b196ec3f77aa6a4393fa2",
+  "claude_code_version": "2.1.266",
+  "converter_version": "0.3.0 (git 759760f)",
+  "capture_time": "2026-09-25T02:29:38Z",
+  "note": "Controlled, real Claude Code session with a synthetic prompt, synthetic file data, and pseudonymized identifiers. Conversion accounts for this sanitized source file, not for any unpublished raw session log."
+}
