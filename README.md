@@ -59,7 +59,7 @@ python -m pip install atomicdjt-agent-session-bridge
 To install the current published release explicitly:
 
 ```bash
-python -m pip install atomicdjt-agent-session-bridge==0.3.0
+python -m pip install atomicdjt-agent-session-bridge==0.4.0
 ```
 
 For development from source:
