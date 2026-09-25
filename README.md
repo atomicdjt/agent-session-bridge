@@ -41,6 +41,7 @@ The reproducible synthetic interoperability corpus, semantic oracle, adversarial
 | Claude Code JSONL import | ✅ | Parses supported message and tool structures into ATIF v1.7 |
 | Portable interchange document | ✅ | Validated by the official `atif` Python models |
 | ASB fidelity reporting | ✅ | Namespaced provenance and unsupported/degraded source counts in ATIF `extra` |
+| Human-readable session report | ✅ | `agent-session explain` renders an ATIF file as Markdown, with what the conversion could not preserve |
 | Heuristic secret redaction | ✅ | Best effort only; output still requires human review |
 | Antigravity derived-log mapping | ✅ | Reference payload based on observed `transcript.jsonl` structures |
 | Native Antigravity session import | ❌ blocked upstream | No supported API creates or resumes external historical state |
@@ -90,6 +91,14 @@ agent-session handoff --from claude-code --to antigravity your_claude_log.jsonl
 ```
 
 `handoff` returns `UnsupportedNativeImport` after producing the reference payload. It does not imply that Antigravity can resume the converted history.
+
+Render the resulting ATIF file as a deterministic Markdown account of the agent's actions, tool calls and results, provenance, and what the conversion could not preserve:
+
+```bash
+agent-session explain trajectory.atif.json --output report.md
+```
+
+Source-level facts that ATIF does not carry (source hash, converter version, capture time) are shown only if you supply them in an optional `--manifest` JSON file, and are then labelled as unverified. See [docs/DEMO_REAL_SESSION.md](docs/DEMO_REAL_SESSION.md) for the private, reproducible procedure for demonstrating this on a real Claude Code session.
 
 ## Architecture
 

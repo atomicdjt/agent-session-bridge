@@ -88,7 +88,7 @@ def read_records(path: Path) -> list[Any]:
 
 
 def default_scan_terms(extra: list[str]) -> list[str]:
-    terms = [getpass.getuser(), Path.home().name, socket.gethostname(), "asb-demo", ".claude"]
+    terms = [getpass.getuser(), Path.home().name, socket.gethostname(), ".claude"]
     for key in ("user.email", "user.name"):
         try:
             value = subprocess.run(
@@ -256,7 +256,7 @@ def main() -> None:
 
     sanitized, drops = sanitize_records(records, path_variants=path_variants_for(cwd))
     sanitized_text = dumps_jsonl(sanitized)
-    terms = default_scan_terms(args.scan_term)
+    terms = default_scan_terms([*args.scan_term, root.name])
     findings = scan_records(sanitized, terms, _redact_text)
 
     staging = run_dir / "staging"
