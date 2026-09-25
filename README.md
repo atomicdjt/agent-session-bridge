@@ -98,7 +98,7 @@ Render the resulting ATIF file as a deterministic Markdown account of the agent'
 agent-session explain trajectory.atif.json --output report.md
 ```
 
-Source-level facts that ATIF does not carry (source hash, converter version, capture time) are shown only if you supply them in an optional `--manifest` JSON file, and are then labelled as unverified. See [docs/DEMO_REAL_SESSION.md](docs/DEMO_REAL_SESSION.md) for the private, reproducible procedure for demonstrating this on a real Claude Code session.
+Source-level facts that ATIF does not carry (source hash, converter version, capture time) are shown only if you supply them in an optional `--manifest` JSON file, and are then labelled as unverified. [`fixtures/real-session/`](fixtures/real-session/README.md) is a sanitized ATIF trajectory and manifest from one controlled, real Claude Code session with synthetic content; it demonstrates this path, not general compatibility. See [docs/DEMO_REAL_SESSION.md](docs/DEMO_REAL_SESSION.md) for the private, reproducible procedure that produced it.
 
 ## Architecture
 

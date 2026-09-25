@@ -2,7 +2,14 @@
 
 This is a private, reproducible procedure for turning a real Claude Code session into three things: an ATIF trajectory, a human-readable report, and an accounting of what the conversion could not preserve. It is built so that the raw session log stays private, and so that nothing is added to a public repository without a manual privacy review.
 
-It does not publish anything. No result from a real session is claimed in this repository yet.
+Running the procedure does not publish anything by itself; it only writes to the private root you give it. [`fixtures/real-session/`](../fixtures/real-session/README.md) is the one candidate that has, after that review, been sanitized, scanned, and added to this repository.
+
+## What this fixture is and is not
+
+- It comes from one controlled, real Claude Code 2.1.266 session — not a hand-written or model-generated source document.
+- Its prompt, file data, paths, and identifiers are synthetic or pseudonymized: a made-up sandbox, a made-up inventory file, and every path, session ID, message ID, and tool-call ID replaced by the sanitizer before anything left the machine.
+- It demonstrates the Claude Code adapter and `agent-session explain` path, and the fidelity limits that path explicitly reports on this session (see [`fixtures/real-session/README.md`](../fixtures/real-session/README.md) for the exact counts).
+- It does **not** establish general compatibility for all Claude Code session types or versions. It is one session, one version, one operating system, and a handful of tools (`Read`, `Bash`, `Edit`, `Write`).
 
 ## What the demonstration shows
 
