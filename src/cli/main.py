@@ -43,6 +43,30 @@ def import_session(args: argparse.Namespace) -> None:
         print("---------------------------", file=sys.stderr)
 
 
+def explain_session(args: argparse.Namespace) -> None:
+    from atif import Trajectory
+    from pydantic import ValidationError
+
+    from explain import ManifestError, load_manifest, render_report
+
+    try:
+        with open(args.file, encoding="utf-8") as atif_file:
+            trajectory = Trajectory.model_validate(json.load(atif_file))
+        manifest = load_manifest(args.manifest) if args.manifest else None
+    except (OSError, json.JSONDecodeError, ValidationError, ManifestError) as error:
+        print(f"Cannot explain {args.file}: {error}", file=sys.stderr)
+        sys.exit(1)
+
+    report = render_report(trajectory, manifest=manifest, max_chars=args.max_chars)
+    if args.output:
+        output_path = Path(args.output)
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(report, encoding="utf-8", newline="\n")
+        print(f"Report written to {args.output}")
+    else:
+        sys.stdout.buffer.write(report.encode("utf-8"))
+
+
 def convert_session(args: argparse.Namespace) -> None:
     with open(args.file, encoding="utf-8") as source_file:
         trajectory = redact_trajectory(parse_claude_jsonl(source_file))
@@ -131,6 +155,24 @@ def main() -> None:
     import_parser.add_argument("--output")
     import_parser.add_argument("--report", action="store_true")
     import_parser.set_defaults(func=import_session)
+
+    explain_parser = subparsers.add_parser(
+        "explain", help="Render an ATIF trajectory as a human-readable Markdown report."
+    )
+    explain_parser.add_argument("file", help="ATIF trajectory JSON, for example from `import`.")
+    explain_parser.add_argument(
+        "--manifest",
+        help="Optional JSON sidecar of source-level facts (source_sha256, claude_code_version, "
+        "converter_version, capture_time, note). Shown labelled as unverified.",
+    )
+    explain_parser.add_argument("--output", help="Write the report here instead of stdout.")
+    explain_parser.add_argument(
+        "--max-chars",
+        type=int,
+        default=2000,
+        help="Truncate each message, argument, and result to this many characters; 0 shows all.",
+    )
+    explain_parser.set_defaults(func=explain_session)
 
     convert_parser = subparsers.add_parser("convert")
     convert_parser.add_argument(
