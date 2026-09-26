@@ -1,3 +1,15 @@
+<div align="center">
+
+<img src="./docs/images/repository-header.svg" alt="AGENT SESSION BRIDGE — portfolio identity banner" width="100%" />
+
+<br />
+
+[**PROJECT PAGE**](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [**PYPI**](https://pypi.org/project/atomicdjt-agent-session-bridge/) · [**PROFILE**](https://github.com/atomicdjt) · [**ARCHITECTURE**](docs/ARCHITECTURE.md)
+
+</div>
+
+<br />
+
 # Agent Session Bridge
 
 [![CI](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml)
