@@ -262,7 +262,7 @@ def _verify_document(
             Finding(
                 "unsupported_source_record_is_omitted",
                 "NOT_APPLICABLE",
-                "Peer implementations do not report an TFB fidelity record count.",
+                "Peer implementations do not report a TFB fidelity record count.",
             )
         )
     return findings
