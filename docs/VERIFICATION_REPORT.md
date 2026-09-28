@@ -44,4 +44,4 @@ This mapping is a reference transformation to observed derived-log structures; i
 ## 6. Final Readiness Classification
 **RFC READY**
 
-The codebase provides a tested Claude Code -> ATIF normalization pipeline with explicit ASB fidelity accounting, redaction, and a reference mapping to observed Antigravity derived-log structures. Native Antigravity ingestion is intentionally not implemented because no supported external creation/import interface was identified in the tested CLI. The repository therefore serves as a reference implementation, verification artifact, and proposed upstream API contract rather than a completed native handoff system.
+The codebase provides a tested Claude Code -> ATIF normalization pipeline with explicit TFB fidelity accounting, redaction, and a reference mapping to observed Antigravity derived-log structures. Native Antigravity ingestion is intentionally not implemented because no supported external creation/import interface was identified in the tested CLI. The repository therefore serves as a reference implementation, verification artifact, and proposed upstream API contract rather than a completed native handoff system.
