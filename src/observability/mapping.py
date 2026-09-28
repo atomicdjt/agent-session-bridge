@@ -42,7 +42,7 @@ def get_openinference_span_attributes(
         attributes["input.value"] = _content(step.message, privacy_mode)
         attributes["input.mime_type"] = "text/plain"
 
-    # ASB specific namespace
+    # TFB specific namespace
     attributes["agent_session_bridge.step_id"] = step.step_id
 
     # Provider and agent info
