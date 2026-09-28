@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="./docs/images/repository-header.svg" alt="AGENT SESSION BRIDGE — portfolio identity banner" width="100%" />
+<img src="./docs/images/repository-header.svg" alt="TRAJECTORY FIDELITY BRIDGE — portfolio identity banner" width="100%" />
 
 <br />
 
@@ -10,29 +10,31 @@
 
 <br />
 
-# Agent Session Bridge
+# Trajectory Fidelity Bridge
 
 [![CI](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml)
 
 **Move structured coding-agent history between tools without collapsing it into a prose summary.**
 
+> **Rename note — September 28, 2026:** This project was renamed from **Agent Session Bridge** to **Trajectory Fidelity Bridge** after discovering an older, unrelated public project already using the former name. The projects are unaffiliated. Legacy package, CLI, repository-slug, and `extra.agent_session_bridge` identifiers may remain temporarily during the compatibility migration.
+
 **[Canonical project page](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [PyPI](https://pypi.org/project/atomicdjt-agent-session-bridge/) · [Open issues](https://github.com/atomicdjt/agent-session-bridge/issues) · [Architecture](docs/ARCHITECTURE.md)**
 
-Agent Session Bridge is an MIT-licensed reference implementation for converting supported coding-agent transcripts into the [Agent Trajectory Interchange Format (ATIF)](https://github.com/harbor-framework/harbor/blob/main/rfcs/0001-trajectory-format.md). It is not a competing interchange standard.
+Trajectory Fidelity Bridge is an MIT-licensed reference implementation for converting supported coding-agent transcripts into the [Agent Trajectory Interchange Format (ATIF)](https://github.com/harbor-framework/harbor/blob/main/rfcs/0001-trajectory-format.md). It is not a competing interchange standard.
 
-> **Current status:** Claude Code JSONL normalization to ATIF v1.7, heuristic secret redaction, ASB fidelity reporting, and an Antigravity derived-log mapping are implemented. Native Antigravity session rehydration is not supported because Antigravity has no supported historical-session import boundary.
+> **Current status:** Claude Code JSONL normalization to ATIF v1.7, heuristic secret redaction, TFB fidelity reporting, and an Antigravity derived-log mapping are implemented. Native Antigravity session rehydration is not supported because Antigravity has no supported historical-session import boundary.
 >
 > **External validation wanted:** sanitized provider fixtures that expose a normalization failure, disagreements with the fidelity report, evidence about additional documented ingestion boundaries, and reproducible cross-provider transformation cases are especially useful. [Open an issue](https://github.com/atomicdjt/agent-session-bridge/issues) with the smallest safe fixture that demonstrates the problem.
 
-![Agent Session Bridge quick tour](docs/images/agent-session-bridge-quick-tour.gif)
+![Trajectory Fidelity Bridge quick tour](docs/images/agent-session-bridge-quick-tour.gif)
 
 *Animated architecture tour based on documented behavior; it is not a fabricated live screen recording.*
 
-## What ATIF provides and what ASB adds
+## What ATIF provides and what TFB adds
 
-ATIF is the portable trajectory layer: ordered system/user/agent steps, structured tool calls, call-correlated observations, agent metadata, metrics, and a namespaced `extra` extension mechanism. ASB converts provider-specific transcript shapes into that public format.
+ATIF is the portable trajectory layer: ordered system/user/agent steps, structured tool calls, call-correlated observations, agent metadata, metrics, and a namespaced `extra` extension mechanism. TFB converts provider-specific transcript shapes into that public format.
 
-ASB's distinct responsibilities are deliberately narrower:
+TFB's distinct responsibilities are deliberately narrower:
 
 - provider-specific parsing and normalization;
 - best-effort secret redaction before export;
@@ -52,7 +54,7 @@ The reproducible synthetic interoperability corpus, semantic oracle, adversarial
 | --- | --- | --- |
 | Claude Code JSONL import | ✅ | Parses supported message and tool structures into ATIF v1.7 |
 | Portable interchange document | ✅ | Validated by the official `atif` Python models |
-| ASB fidelity reporting | ✅ | Namespaced provenance and unsupported/degraded source counts in ATIF `extra` |
+| TFB fidelity reporting | ✅ | Namespaced provenance and unsupported/degraded source counts in ATIF `extra` |
 | Human-readable session report | ✅ | `agent-session explain` renders an ATIF file as Markdown, with what the conversion could not preserve |
 | Heuristic secret redaction | ✅ | Best effort only; output still requires human review |
 | Antigravity derived-log mapping | ✅ | Reference payload based on observed `transcript.jsonl` structures |
@@ -94,7 +96,7 @@ source .venv/bin/activate
 python -m pip install -e .
 ```
 
-Normalize a Claude Code transcript to an ATIF document, inspect ASB's source-fidelity report, or generate the Antigravity reference mapping:
+Normalize a Claude Code transcript to an ATIF document, inspect TFB's source-fidelity report, or generate the Antigravity reference mapping:
 
 ```bash
 agent-session import --from claude-code --source your_claude_log.jsonl --output trajectory.atif.json --report
@@ -121,7 +123,7 @@ provider transcript
 source parser and normalizer
        │
        ▼
-ATIF trajectory ─────► ASB provenance/fidelity extension
+ATIF trajectory ─────► TFB provenance/fidelity extension
        │
        ├──────────────► redacted portable trajectory
        │
@@ -136,12 +138,12 @@ ATIF makes a trajectory portable; it does not require target runtimes to ingest 
 
 ## Fidelity and security boundaries
 
-For the current Claude Code adapter, ASB preserves supported roles, valid ISO-8601 step timestamps, text, tool names, tool arguments, and tool results. It normalizes later Claude `tool_result` blocks into ATIF observations attached to their originating calls. Unsupported source records or blocks are counted in `extra.agent_session_bridge.fidelity`; they are never represented as successfully preserved. ATIF v1.7 has no timestamp on an observation result, so tool-result timestamps are not carried into the output; they are counted as `omitted_tool_result_timestamps` and no time is ever invented ([details](docs/FORMAT.md#timestamp-semantics)).
+For the current Claude Code adapter, TFB preserves supported roles, valid ISO-8601 step timestamps, text, tool names, tool arguments, and tool results. It normalizes later Claude `tool_result` blocks into ATIF observations attached to their originating calls. Unsupported source records or blocks are counted in `extra.agent_session_bridge.fidelity`; they are never represented as successfully preserved. ATIF v1.7 has no timestamp on an observation result, so tool-result timestamps are not carried into the output; they are counted as `omitted_tool_result_timestamps` and no time is ever invented ([details](docs/FORMAT.md#timestamp-semantics)).
 
 - Imported history is processed as data. Historical commands are never executed.
 - Redaction is heuristic and is not a guarantee; see [what it does and does not cover](docs/SECURITY.md#what-redaction-covers).
 - Do not publish a converted transcript without reviewing it for credentials, personal data, private source, or proprietary context.
-- ASB does not reverse-engineer or write Antigravity's opaque internal session database.
+- TFB does not reverse-engineer or write Antigravity's opaque internal session database.
 
 ## Optional observability projection
 
@@ -150,7 +152,7 @@ The observability implementation is an optional downstream projection of ATIF, n
 ```text
 provider transcript
         ↓
-Agent Session Bridge
+Trajectory Fidelity Bridge
         ↓
 ATIF v1.7
         ↓
@@ -169,7 +171,7 @@ To install the optional observability dependencies:
 python -m pip install -e ".[observability]"
 ```
 
-For the local Phoenix example, Phoenix may be installed separately. It is not required for core Agent Session Bridge operation:
+For the local Phoenix example, Phoenix may be installed separately. It is not required for core Trajectory Fidelity Bridge operation:
 
 ```bash
 python -m pip install arize-phoenix
@@ -201,7 +203,7 @@ For implementation details, see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md). 
 
 ## Migration from v0.1 ASEF output
 
-v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not ATIF documents and must not be relabeled as such. Re-run the original source transcript through `agent-session import` to produce a validated `*.atif.json` file, then review the ASB fidelity report. Python 3.11 is now the minimum supported version because the official ATIF models require it.
+v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not ATIF documents and must not be relabeled as such. Re-run the original source transcript through `agent-session import` to produce a validated `*.atif.json` file, then review the TFB fidelity report. Python 3.11 is now the minimum supported version because the official ATIF models require it.
 
 ## Releasing
 
