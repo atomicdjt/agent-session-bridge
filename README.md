@@ -4,7 +4,7 @@
 
 <br />
 
-[**PROJECT PAGE**](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [**PYPI**](https://pypi.org/project/atomicdjt-agent-session-bridge/) · [**PROFILE**](https://github.com/atomicdjt) · [**ARCHITECTURE**](docs/ARCHITECTURE.md)
+[**PROJECT PAGE**](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [**PYPI**](https://pypi.org/project/atomicdjt-trajectory-fidelity-bridge/) · [**PROFILE**](https://github.com/atomicdjt) · [**ARCHITECTURE**](docs/ARCHITECTURE.md)
 
 </div>
 
@@ -12,19 +12,19 @@
 
 # Trajectory Fidelity Bridge
 
-[![CI](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/atomicdjt/agent-session-bridge/actions/workflows/ci.yml)
+[![CI](https://github.com/atomicdjt/trajectory-fidelity-bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/atomicdjt/trajectory-fidelity-bridge/actions/workflows/ci.yml)
 
 **Move structured coding-agent history between tools without collapsing it into a prose summary.**
 
-> **Rename note — September 28, 2026:** This project was renamed from **Agent Session Bridge** to **Trajectory Fidelity Bridge** after discovering an older, unrelated public project already using the former name. The projects are unaffiliated. Legacy package, CLI, repository-slug, and `extra.agent_session_bridge` identifiers may remain temporarily during the compatibility migration.
+> **Rename note — September 28, 2026:** This project was renamed from **Agent Session Bridge** to **Trajectory Fidelity Bridge** after discovering an older, unrelated public project already using the former name. The projects are unaffiliated. The `agent-session` CLI, `extra.agent_session_bridge` extension namespace, and older PyPI distribution remain available as compatibility identifiers.
 
-**[Canonical project page](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [PyPI](https://pypi.org/project/atomicdjt-agent-session-bridge/) · [Open issues](https://github.com/atomicdjt/agent-session-bridge/issues) · [Architecture](docs/ARCHITECTURE.md)**
+**[Canonical project page](https://ai-project-portfolio-portfolio-hub.vercel.app/projects/agent-session-bridge) · [PyPI](https://pypi.org/project/atomicdjt-trajectory-fidelity-bridge/) · [Open issues](https://github.com/atomicdjt/trajectory-fidelity-bridge/issues) · [Architecture](docs/ARCHITECTURE.md)**
 
 Trajectory Fidelity Bridge is an MIT-licensed reference implementation for converting supported coding-agent transcripts into the [Agent Trajectory Interchange Format (ATIF)](https://github.com/harbor-framework/harbor/blob/main/rfcs/0001-trajectory-format.md). It is not a competing interchange standard.
 
 > **Current status:** Claude Code JSONL normalization to ATIF v1.7, heuristic secret redaction, TFB fidelity reporting, and an Antigravity derived-log mapping are implemented. Native Antigravity session rehydration is not supported because Antigravity has no supported historical-session import boundary.
 >
-> **External validation wanted:** sanitized provider fixtures that expose a normalization failure, disagreements with the fidelity report, evidence about additional documented ingestion boundaries, and reproducible cross-provider transformation cases are especially useful. [Open an issue](https://github.com/atomicdjt/agent-session-bridge/issues) with the smallest safe fixture that demonstrates the problem.
+> **External validation wanted:** sanitized provider fixtures that expose a normalization failure, disagreements with the fidelity report, evidence about additional documented ingestion boundaries, and reproducible cross-provider transformation cases are especially useful. [Open an issue](https://github.com/atomicdjt/trajectory-fidelity-bridge/issues) with the smallest safe fixture that demonstrates the problem.
 
 ![Trajectory Fidelity Bridge quick tour](docs/images/agent-session-bridge-quick-tour.gif)
 
@@ -62,25 +62,25 @@ The reproducible synthetic interoperability corpus, semantic oracle, adversarial
 
 ## Quick start
 
-This project is published on PyPI as `atomicdjt-agent-session-bridge`; the shorter name `agent-session-bridge` belongs to an unrelated project. Python 3.11 or newer is required.
+This project is published on PyPI as `atomicdjt-trajectory-fidelity-bridge`. The earlier `atomicdjt-agent-session-bridge` project remains available at 0.4.0 for existing users. The shorter name `agent-session-bridge` belongs to an unrelated project. Python 3.11 or newer is required. See [the migration guide](docs/PYPI_MIGRATION.md) before switching an existing environment.
 
 Install the published package:
 
 ```bash
-python -m pip install atomicdjt-agent-session-bridge
+python -m pip install atomicdjt-trajectory-fidelity-bridge
 ```
 
 To install the current published release explicitly:
 
 ```bash
-python -m pip install atomicdjt-agent-session-bridge==0.4.0
+python -m pip install atomicdjt-trajectory-fidelity-bridge==0.4.1
 ```
 
 For development from source:
 
 ```bash
-git clone https://github.com/atomicdjt/agent-session-bridge.git
-cd agent-session-bridge
+git clone https://github.com/atomicdjt/trajectory-fidelity-bridge.git
+cd trajectory-fidelity-bridge
 python -m venv .venv
 ```
 
@@ -180,7 +180,7 @@ python -m pip install arize-phoenix
 A Claude Code source may also be observed using the existing supported `--from claude-code` path where appropriate.
 
 ```bash
-agent-session observe trajectory.atif.json \
+tfb observe trajectory.atif.json \
   --from atif \
   --backend phoenix \
   --endpoint http://127.0.0.1:6006/v1/traces
@@ -203,26 +203,28 @@ For implementation details, see [docs/OBSERVABILITY.md](docs/OBSERVABILITY.md). 
 
 ## Migration from v0.1 ASEF output
 
-v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not ATIF documents and must not be relabeled as such. Re-run the original source transcript through `agent-session import` to produce a validated `*.atif.json` file, then review the TFB fidelity report. Python 3.11 is now the minimum supported version because the official ATIF models require it.
+v0.2 removes the proprietary ASEF schema. Existing `*.asef.json` files are not ATIF documents and must not be relabeled as such. Re-run the original source transcript through `agent-session import` (or `tfb import`) to produce a validated `*.atif.json` file, then review the TFB fidelity report. Python 3.11 is now the minimum supported version because the official ATIF models require it.
 
 ## Releasing
 
 This project is published to PyPI through GitHub Actions and PyPI Trusted Publishing using OpenID Connect (OIDC). The workflow builds the wheel and source distribution and runs `twine check`. For tag-triggered releases, it also verifies that the release tag matches the project version before publishing. A manual `workflow_dispatch` does not perform the tag/version check; it publishes the version currently declared in `pyproject.toml`. No PyPI API token is stored in this repository.
 
-The published package is available at:
+The current package is available at:
 
-https://pypi.org/project/atomicdjt-agent-session-bridge/
+https://pypi.org/project/atomicdjt-trajectory-fidelity-bridge/
+
+The previous distribution, `atomicdjt-agent-session-bridge`, remains published at version 0.4.0. It is not deleted or replaced by a stub. Existing installations keep working; migration instructions are in [docs/PYPI_MIGRATION.md](docs/PYPI_MIGRATION.md).
 
 For future releases:
 
 1. Update `project.version` in `pyproject.toml` and any related release metadata.
 2. Merge the change into `main`.
-3. Create a matching GitHub tag and release from `main`, such as `v0.2.2`.
+3. Create a matching GitHub tag and release from `main`, such as `v0.4.2`.
 4. Wait for the `Publish to PyPI` workflow to complete.
 5. Verify the new version on PyPI.
 6. Test installation in a clean environment.
 
-The tag must match the project version exactly. For example, tag `v0.2.2` requires project version `0.2.2`.
+Before the first release of the new distribution, add a pending PyPI Trusted Publisher for `atomicdjt-trajectory-fidelity-bridge`, owner `atomicdjt`, repository `trajectory-fidelity-bridge`, workflow `publish.yml`, and environment `pypi`. The tag must match the project version exactly. For example, tag `v0.4.2` requires project version `0.4.2`.
 
 ## Contributing
 

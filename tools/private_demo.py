@@ -202,7 +202,7 @@ def converter_version() -> str:
     try:
         from importlib.metadata import version
 
-        base = version("atomicdjt-agent-session-bridge")
+        base = version("atomicdjt-trajectory-fidelity-bridge")
     except Exception:  # noqa: BLE001 - the version is a label, not a requirement
         base = "unknown"
     try:

@@ -2,7 +2,7 @@
 
 > Historical submission draft, updated after the v0.2 ATIF migration. The current implementation is ATIF-based; this document retains the tested Antigravity boundary evidence.
 
-Hi everyone — building on the provenance/fail-closed discussion above, I built and adversarially tested a reference implementation for the **external side** of this request: [Trajectory Fidelity Bridge](https://github.com/atomicdjt/agent-session-bridge).
+Hi everyone — building on the provenance/fail-closed discussion above, I built and adversarially tested a reference implementation for the **external side** of this request: [Trajectory Fidelity Bridge](https://github.com/atomicdjt/trajectory-fidelity-bridge).
 
 It currently provides:
 
@@ -19,9 +19,9 @@ That seems to leave the same narrow missing primitive identified in this issue: 
 I also tested `--input-format stream-json`; on 1.1.17 it supports driving new/live turns, but did not provide a way to reconstruct externally generated prior assistant/tool history as imported native history.
 
 Artifacts:
-- **Repository:** https://github.com/atomicdjt/agent-session-bridge
-- **Integration RFC:** https://github.com/atomicdjt/agent-session-bridge/blob/main/docs/ANTIGRAVITY_INTEGRATION.md
-- **Verification / ablation report:** https://github.com/atomicdjt/agent-session-bridge/blob/main/docs/VERIFICATION_REPORT.md
-- **Reproduction guide:** https://github.com/atomicdjt/agent-session-bridge/blob/main/docs/EXPERIMENT_REPRO.md
+- **Repository:** https://github.com/atomicdjt/trajectory-fidelity-bridge
+- **Integration RFC:** https://github.com/atomicdjt/trajectory-fidelity-bridge/blob/main/docs/ANTIGRAVITY_INTEGRATION.md
+- **Verification / ablation report:** https://github.com/atomicdjt/trajectory-fidelity-bridge/blob/main/docs/VERIFICATION_REPORT.md
+- **Reproduction guide:** https://github.com/atomicdjt/trajectory-fidelity-bridge/blob/main/docs/EXPERIMENT_REPRO.md
 
 Feedback or corrections on the proposed boundary are very welcome.

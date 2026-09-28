@@ -5,7 +5,20 @@
 ### Renamed
 
 - Renamed the public project from **Agent Session Bridge** to **Trajectory Fidelity Bridge (TFB)** on 2026-09-28 after identifying an older, unrelated public project that already used the former name. The projects are unaffiliated.
-- Legacy distribution, CLI, repository-slug, and `extra.agent_session_bridge` identifiers may remain temporarily during a compatibility-preserving migration.
+- The previous PyPI distribution and the `agent-session` command remain available for compatibility; new releases use the renamed distribution and also provide `tfb`.
+
+## [0.4.1] - 2026-09-28
+
+### Changed
+
+- Published this release as `atomicdjt-trajectory-fidelity-bridge`. The existing `atomicdjt-agent-session-bridge` PyPI project and its 0.4.0 release remain available for users who have not migrated.
+- Added the `tfb` command as a shorter alias while retaining `agent-session` for existing scripts and documentation.
+- Updated repository links and citation metadata to the renamed GitHub repository.
+
+### Migration
+
+- Existing installations of `atomicdjt-agent-session-bridge==0.4.0` continue to work. New environments should install `atomicdjt-trajectory-fidelity-bridge`.
+- See [the PyPI migration guide](docs/PYPI_MIGRATION.md) before switching an existing environment.
 
 This file records user-visible changes in Trajectory Fidelity Bridge releases.
 

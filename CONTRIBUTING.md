@@ -19,8 +19,8 @@ Small, bounded pull requests are preferred over broad rewrites.
 ## Local setup
 
 ```bash
-git clone https://github.com/atomicdjt/agent-session-bridge.git
-cd agent-session-bridge
+git clone https://github.com/atomicdjt/trajectory-fidelity-bridge.git
+cd trajectory-fidelity-bridge
 python -m venv .venv
 ```
 
@@ -40,7 +40,7 @@ Install the project and development dependencies:
 python -m pip install -e ".[dev]"
 ```
 
-> This repository is not currently published to PyPI. The distribution name `agent-session-bridge` on PyPI belongs to an unrelated project.
+> The current PyPI distribution is `atomicdjt-trajectory-fidelity-bridge`. The shorter `agent-session-bridge` name belongs to an unrelated project. The previous `atomicdjt-agent-session-bridge` distribution remains available for existing installations.
 
 ## Verification
 
