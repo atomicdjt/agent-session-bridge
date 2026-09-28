@@ -1,6 +1,6 @@
 # Security Policy
 
-Agent Session Bridge processes coding-agent transcripts that may contain credentials, private source material, personal data, proprietary context, or other sensitive information. Its redaction layer is deliberately described as **best effort**, not as a security guarantee.
+Trajectory Fidelity Bridge processes coding-agent transcripts that may contain credentials, private source material, personal data, proprietary context, or other sensitive information. Its redaction layer is deliberately described as **best effort**, not as a security guarantee.
 
 ## Supported scope
 
@@ -24,13 +24,13 @@ Prefer synthetic fixtures. Do not send a real API key, access token, customer tr
 
 ## Security boundaries
 
-- Imported transcript history is treated as data; historical commands are not executed by Agent Session Bridge.
+- Imported transcript history is treated as data; historical commands are not executed by Trajectory Fidelity Bridge.
 - Secret redaction is heuristic and can miss sensitive material or over-redact benign material.
 - Converted transcripts must be reviewed before publication, sharing, or ingestion into another system.
 - `metadata-only` is the default observability privacy mode.
 - `redacted-content` still depends on best-effort redaction.
 - `full-content` is explicitly opt-in and can expose sensitive transcript content to the configured observability backend.
-- Agent Session Bridge does not claim to make untrusted transcripts safe merely by converting them to ATIF.
+- Trajectory Fidelity Bridge does not claim to make untrusted transcripts safe merely by converting them to ATIF.
 
 See the [README security boundaries](README.md#fidelity-and-security-boundaries) and [observability documentation](docs/OBSERVABILITY.md) for the product's documented data-handling model.
 
