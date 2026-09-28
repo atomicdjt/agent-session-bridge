@@ -216,7 +216,7 @@ def _verify_document(
                 expected_fidelity,
                 {key: fidelity.get(key) for key in expected_fidelity},
                 "PRESERVED",
-                "ASB fidelity report",
+                "TFB fidelity report",
             )
         )
         findings.append(
@@ -242,7 +242,7 @@ def _verify_document(
             Finding(
                 "peer_specific_fidelity_and_redaction",
                 "NOT_APPLICABLE",
-                "ASB policy fields are not imposed on an independent implementation.",
+                "TFB policy fields are not imposed on an independent implementation.",
             )
         )
 
@@ -262,7 +262,7 @@ def _verify_document(
             Finding(
                 "unsupported_source_record_is_omitted",
                 "NOT_APPLICABLE",
-                "Peer implementations do not report an ASB fidelity record count.",
+                "Peer implementations do not report an TFB fidelity record count.",
             )
         )
     return findings
@@ -295,7 +295,7 @@ def _tool_result_timestamp_finding(
             return Finding(
                 "tool_result_timestamps",
                 "CONFLICT",
-                f"{detail} ASB fidelity reports omitted_tool_result_timestamps={reported!r}.",
+                f"{detail} TFB fidelity reports omitted_tool_result_timestamps={reported!r}.",
             )
     return Finding("tool_result_timestamps", "OMITTED", detail)
 
@@ -369,7 +369,7 @@ def _canonical_result(value: Any) -> Any:
 
 
 def _redaction_finding(output_document: dict[str, Any], oracle: dict[str, Any]) -> Finding:
-    """Ensure configured source secrets and workspace paths do not survive ASB redaction."""
+    """Ensure configured source secrets and workspace paths do not survive TFB redaction."""
     serialized = json.dumps(output_document, ensure_ascii=False, sort_keys=True)
     expectations = oracle["asb_policy"]["redaction_expectations"]
     sentinel = oracle["asb_policy"]["redaction_sentinel"]
@@ -381,7 +381,7 @@ def _redaction_finding(output_document: dict[str, Any], oracle: dict[str, Any]) 
         "workspace", {}
     )
     if "cwd" in workspace:
-        return Finding("secret_redaction", "CONFLICT", "workspace cwd survived ASB redaction")
+        return Finding("secret_redaction", "CONFLICT", "workspace cwd survived TFB redaction")
     return Finding("secret_redaction", "PRESERVED", "synthetic secret-like values were redacted")
 
 
@@ -422,7 +422,7 @@ def _ignored_field_finding(
 
 
 def _fidelity(document: dict[str, Any]) -> dict[str, Any]:
-    """Return the optional ASB fidelity extension or an empty report."""
+    """Return the optional TFB fidelity extension or an empty report."""
     return document.get("extra", {}).get("agent_session_bridge", {}).get("fidelity", {})
 
 
@@ -518,7 +518,7 @@ def _unsupported_source_record_descriptors(
 
 def main(argv: list[str] | None = None) -> int:
     """Run the semantic verifier CLI and return a conflict-sensitive exit code."""
-    parser = argparse.ArgumentParser(description="Verify ASB semantic interoperability fixtures")
+    parser = argparse.ArgumentParser(description="Verify TFB semantic interoperability fixtures")
     parser.add_argument("--source", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--oracle", type=Path, required=True)
