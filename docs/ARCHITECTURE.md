@@ -10,7 +10,7 @@ Provider adapter
        │
        ▼
 ATIF v1.7 trajectory
-       ├────────► ASB `extra.agent_session_bridge` provenance and fidelity
+       ├────────► TFB `extra.agent_session_bridge` provenance and fidelity
        ├────────► best-effort redaction
        ▼
 Target adapter
@@ -22,11 +22,11 @@ Target payload or target-owned supported importer
 
 ### ATIF: portable trajectory/interchange
 
-ATIF is the external canonical representation. It defines ordered system/user/agent steps, structured tool calls, observations correlated by call ID, agent metadata, optional metrics, and `extra` for extensions. ASB depends on the official `atif` models rather than maintaining a parallel canonical schema.
+ATIF is the external canonical representation. It defines ordered system/user/agent steps, structured tool calls, observations correlated by call ID, agent metadata, optional metrics, and `extra` for extensions. TFB depends on the official `atif` models rather than maintaining a parallel canonical schema.
 
-### Agent Session Bridge: normalization and evidence
+### Trajectory Fidelity Bridge: normalization and evidence
 
-ASB parses provider-specific logs, attaches Claude Code's later `tool_result` blocks to the originating agent step as ATIF observations, redacts obvious secrets, records conversion evidence, and maps ATIF into target-specific payloads. Its only project-specific format surface is the `agent_session_bridge` namespace in ATIF's `extra` field.
+TFB parses provider-specific logs, attaches Claude Code's later `tool_result` blocks to the originating agent step as ATIF observations, redacts obvious secrets, records conversion evidence, and maps ATIF into target-specific payloads. Its only project-specific format surface is the `agent_session_bridge` namespace in ATIF's `extra` field.
 
 ### Target runtime: native import and resumability
 
