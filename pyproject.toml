@@ -3,9 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-# Legacy distribution name retained temporarily during the Trajectory Fidelity Bridge rebrand.
-name = "atomicdjt-agent-session-bridge"
-version = "0.4.0"
+name = "atomicdjt-trajectory-fidelity-bridge"
+version = "0.4.1"
 description = "ATIF-based reference implementation for portable coding-agent trajectories with explicit fidelity and loss reporting."
 readme = "README.md"
 license = {text = "MIT"}
@@ -33,9 +32,9 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/atomicdjt/agent-session-bridge"
-Repository = "https://github.com/atomicdjt/agent-session-bridge"
-Issues = "https://github.com/atomicdjt/agent-session-bridge/issues"
+Homepage = "https://github.com/atomicdjt/trajectory-fidelity-bridge"
+Repository = "https://github.com/atomicdjt/trajectory-fidelity-bridge"
+Issues = "https://github.com/atomicdjt/trajectory-fidelity-bridge/issues"
 
 [project.optional-dependencies]
 dev = [
@@ -53,3 +52,4 @@ observability = [
 
 [project.scripts]
 agent-session = "cli.main:main"
+tfb = "cli.main:main"

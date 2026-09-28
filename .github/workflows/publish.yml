@@ -1,18 +1,18 @@
 name: Publish to PyPI
 
-# Builds and publishes atomicdjt-agent-session-bridge using PyPI Trusted
+# Builds and publishes atomicdjt-trajectory-fidelity-bridge using PyPI Trusted
 # Publishing (OIDC) -- no PyPI token is stored in this repository.
 #
 # One-time setup required on pypi.org before this workflow can publish
 # (see README "Releasing" section):
 #   1. Create a PyPI account if one does not exist.
 #   2. On pypi.org, add a *pending* trusted publisher for a project named
-#      atomicdjt-agent-session-bridge, with:
+#      atomicdjt-trajectory-fidelity-bridge, with:
 #        Owner:            atomicdjt
-#        Repository name:  agent-session-bridge
+#        Repository name:  trajectory-fidelity-bridge
 #        Workflow name:    publish.yml
 #        Environment name: pypi
-#   3. Push a tag matching v*.*.* (e.g. v0.2.1), or run this workflow
+#   3. Push a tag matching v*.*.* (e.g. v0.4.1), or run this workflow
 #      manually from the Actions tab.
 #
 # Until that pending publisher exists, the "Publish" job below will fail
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/atomicdjt-agent-session-bridge
+      url: https://pypi.org/p/atomicdjt-trajectory-fidelity-bridge
     permissions:
       id-token: write  # required for OIDC trusted publishing; no API token needed
     steps:

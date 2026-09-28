@@ -17,8 +17,7 @@ Some machine-facing identifiers may retain the former wording temporarily so exi
 - PyPI distribution: `atomicdjt-agent-session-bridge`
 - CLI entry point: `agent-session`
 - ATIF extension namespace: `extra.agent_session_bridge`
-- GitHub repository slug and existing inbound links during the repository-name migration
 
-These are legacy compatibility identifiers, not a statement of affiliation with the unrelated project.
+The legacy PyPI distribution remains published at version 0.4.0 while new releases use `atomicdjt-trajectory-fidelity-bridge`. These identifiers are compatibility surfaces, not a statement of affiliation with the unrelated project.
 
 When a machine-facing identifier is migrated, the project will preserve compatibility where practical and document the transition in the changelog.

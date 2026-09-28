@@ -5,9 +5,9 @@ type: software
 authors:
   - family-names: "Turner"
     given-names: "David"
-version: 0.4.0
-url: "https://github.com/atomicdjt/agent-session-bridge"
-repository-code: "https://github.com/atomicdjt/agent-session-bridge"
+version: 0.4.1
+url: "https://github.com/atomicdjt/trajectory-fidelity-bridge"
+repository-code: "https://github.com/atomicdjt/trajectory-fidelity-bridge"
 license: MIT
 abstract: >-
   ATIF-based reference implementation for portable coding-agent trajectories
