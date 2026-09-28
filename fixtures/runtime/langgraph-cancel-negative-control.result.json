@@ -1,0 +1,41 @@
+{
+  "schema": "tfb.runtime-boundary-observation.v1",
+  "case": "langgraph-visible-stream-cancel-before-state-checkpoint",
+  "runtime": {
+    "python": "3.14.7",
+    "langgraph": "1.2.12",
+    "langgraph-checkpoint-sqlite": "3.1.1",
+    "checkpointer": "AsyncSqliteSaver",
+    "durability": "sync",
+    "model_or_external_api": false
+  },
+  "run_identity": {
+    "thread_id": "tfb-langgraph-negative-control",
+    "run_id": "lg-negative-control-run-001",
+    "run_generation": 1
+  },
+  "observation": {
+    "stream_seq": 1,
+    "kind": "partial_output",
+    "consumer_observed": true,
+    "observed_at_utc": null,
+    "timestamp_status": "not captured"
+  },
+  "cancellation": {
+    "requested_after_observation": true,
+    "node_returned": false
+  },
+  "checkpoint_readback": {
+    "prior_state_readable": true,
+    "messages": [
+      "synthetic checkpoint state from before cancellation"
+    ],
+    "contains_partial_stream_output": false
+  },
+  "classification": {
+    "observation": "OBSERVED",
+    "checkpoint_persistence": "NOT_PROVEN",
+    "outcome": "UNKNOWN"
+  },
+  "scope": "Local LangGraph graph plus SQLite checkpointer only; this does not reproduce LangGraph Platform/API issue #5672."
+}

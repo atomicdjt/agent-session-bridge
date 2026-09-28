@@ -17,6 +17,8 @@ The `.atif.json` files are complete documents and must validate with the officia
 
 The manifest in `manifest.json` is the machine-readable index used by the conformance tests. All values are fictional. Do not add real transcripts, credentials, private source, or personal data.
 
+The separate [`fixtures/runtime/`](../runtime/README.md) directory holds bounded runtime observations that are not ATIF conformance documents.
+
 ## What the fixtures do not prove
 
 Passing these fixtures proves only that an adapter can produce and inspect the represented ATIF structures and fidelity states. It does not prove native target import, historical session resumption, encryption, synchronization, or runtime observability.

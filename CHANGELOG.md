@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added a pinned, local LangGraph cancellation negative control showing that consumer-observed custom stream output is not checkpoint state; the result remains `OBSERVED` / `NOT_PROVEN` / `UNKNOWN` and does not claim to reproduce the hosted Platform/API report.
+
 ### Renamed
 
 - Renamed the public project from **Agent Session Bridge** to **Trajectory Fidelity Bridge (TFB)** on 2026-09-28 after identifying an older, unrelated public project that already used the former name. The projects are unaffiliated.
