@@ -1,4 +1,4 @@
-# Agent Session Bridge conformance fixtures
+# Trajectory Fidelity Bridge conformance fixtures
 
 This directory contains small, synthetic ATIF v1.7 documents and one source/expected pair for adapter authors. The fixtures are intentionally provider-neutral: they exercise the portable trajectory contract and the namespaced `extra.agent_session_bridge` fidelity contract without claiming that any target can resume a native session.
 

@@ -1,6 +1,6 @@
-# Contributing to Agent Session Bridge
+# Contributing to Trajectory Fidelity Bridge
 
-Agent Session Bridge welcomes focused contributions that make coding-agent history more portable **without overstating fidelity**.
+Trajectory Fidelity Bridge welcomes focused contributions that make coding-agent history more portable **without overstating fidelity**.
 
 ## Contribution priorities
 
@@ -112,7 +112,7 @@ A strong PR should answer:
 - How is the change tested?
 - What information is preserved, normalized, degraded, or dropped?
 - Does the change alter the security boundary?
-- Does it introduce a new provider-specific assumption into an ASB ATIF extension or adapter?
+- Does it introduce a new provider-specific assumption into an TFB ATIF extension or adapter?
 
 ## AI-assisted contributions
 

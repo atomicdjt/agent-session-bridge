@@ -1,6 +1,13 @@
 # Changelog
 
-This file records user-visible changes in Agent Session Bridge releases.
+## [Unreleased]
+
+### Renamed
+
+- Renamed the public project from **Agent Session Bridge** to **Trajectory Fidelity Bridge (TFB)** on 2026-09-28 after identifying an older, unrelated public project that already used the former name. The projects are unaffiliated.
+- Legacy distribution, CLI, repository-slug, and `extra.agent_session_bridge` identifiers may remain temporarily during a compatibility-preserving migration.
+
+This file records user-visible changes in Trajectory Fidelity Bridge releases.
 
 ## [0.4.0] - 2026-09-24
 

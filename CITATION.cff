@@ -1,6 +1,6 @@
 cff-version: 1.2.0
-message: "If you use Agent Session Bridge in research or technical work, please cite this software."
-title: "Agent Session Bridge"
+message: "If you use Trajectory Fidelity Bridge in research or technical work, please cite this software."
+title: "Trajectory Fidelity Bridge"
 type: software
 authors:
   - family-names: "Turner"

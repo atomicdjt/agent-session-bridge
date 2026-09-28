@@ -30,7 +30,7 @@ def parse_source_time(ts: str) -> int:
 
 def project_trajectory(trajectory: Trajectory, privacy_mode: str = "metadata-only"):
     """
-    Project an ASB ATIF trajectory into OpenTelemetry spans.
+    Project an TFB ATIF trajectory into OpenTelemetry spans.
     """
     if not trajectory.steps:
         return

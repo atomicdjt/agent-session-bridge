@@ -2,7 +2,7 @@
 
 ## Protections Implemented
 * **Passive Processing:** Imported transcript text and tool results are strictly treated as data. Historical commands are never executed during the ingestion or conversion process.
-* **Redaction Heuristics:** The `security.redact` module employs regex-based scanning to replace credential-like values with `[REDACTED]`. It traverses ATIF strings, multimodal `ContentPart` values, tool arguments, and ASB extension values; `workspace.cwd` is omitted from redacted output. See [What redaction covers](#what-redaction-covers).
+* **Redaction Heuristics:** The `security.redact` module employs regex-based scanning to replace credential-like values with `[REDACTED]`. It traverses ATIF strings, multimodal `ContentPart` values, tool arguments, and TFB extension values; `workspace.cwd` is omitted from redacted output. See [What redaction covers](#what-redaction-covers).
 * **Safe Deserialization:** Parsing relies exclusively on standard JSON and Pydantic validation. No untrusted pickle-like formats, `eval`, or `exec` are utilized.
 
 ## What redaction covers
