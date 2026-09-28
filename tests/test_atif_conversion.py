@@ -149,7 +149,7 @@ def test_parser_reports_tool_calls_outside_agent_steps_as_unsupported():
 
 
 def test_atif_serialization_round_trip_remains_valid():
-    """Fails if ASB emits data that the official ATIF validator cannot read back."""
+    """Fails if TFB emits data that the official ATIF validator cannot read back."""
     with FIXTURE.open(encoding="utf-8") as file_stream:
         trajectory = parse_claude_jsonl(file_stream)
 
@@ -181,7 +181,7 @@ def test_redaction_preserves_a_valid_atif_trajectory():
 
 
 def test_redaction_sanitizes_content_parts_and_omits_workspace_cwd():
-    """Fails if multimodal text or sensitive ASB workspace paths survive redaction."""
+    """Fails if multimodal text or sensitive TFB workspace paths survive redaction."""
     trajectory = Trajectory(
         schema_version="ATIF-v1.7",
         agent=Agent(name="fixture-agent", version="1.0"),
@@ -315,7 +315,7 @@ def test_cli_report_keeps_stdout_as_one_atif_document():
     emitted = Trajectory.model_validate_json(completed.stdout)
 
     assert emitted.schema_version == "ATIF-v1.7"
-    assert "--- ASB Fidelity Report ---" in completed.stderr
+    assert "--- TFB Fidelity Report ---" in completed.stderr
 
 
 def test_parser_counts_non_object_json_records_without_aborting():
