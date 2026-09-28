@@ -39,7 +39,7 @@ def _verify(tmp_path: Path, document: dict[str, object]) -> dict[str, object]:
 
 
 def test_canonical_fixture_passes_semantic_verifier(tmp_path: Path):
-    """The committed canonical candidate satisfies every ASB semantic finding."""
+    """The committed canonical candidate satisfies every TFB semantic finding."""
     report = _verify(tmp_path, _valid_document())
 
     assert report["summary"] == {"passed": True, "findings": 17, "conflicts": 0}
@@ -234,7 +234,7 @@ def test_empty_object_replacing_unsupported_record_conflicts_with_oracle_count(
 
 
 def test_peer_unsupported_record_finding_is_not_a_self_comparison(tmp_path: Path):
-    """Peer reports mark ASB-only unsupported-record accounting as not applicable."""
+    """Peer reports mark TFB-only unsupported-record accounting as not applicable."""
     report = verify_files(
         SOURCE,
         _write_document(tmp_path, _valid_document()),
@@ -249,4 +249,4 @@ def test_peer_unsupported_record_finding_is_not_a_self_comparison(tmp_path: Path
     )
 
     assert finding["state"] == "NOT_APPLICABLE"
-    assert "do not report an ASB fidelity record count" in finding["detail"]
+    assert "do not report a TFB fidelity record count" in finding["detail"]
