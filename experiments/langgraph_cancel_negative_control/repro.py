@@ -15,7 +15,6 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from langgraph.config import get_stream_writer
 from langgraph.graph import END, START, StateGraph
 
-
 THREAD_ID = "tfb-langgraph-negative-control"
 SEED_MESSAGE = "synthetic checkpoint state from before cancellation"
 PARTIAL_MESSAGE = "synthetic partial output observed before cancellation"

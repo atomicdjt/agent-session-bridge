@@ -1,7 +1,6 @@
 import json
 from pathlib import Path
 
-
 FIXTURE = Path("fixtures/runtime/langgraph-cancel-negative-control.result.json")
 
 
