@@ -285,7 +285,7 @@ def _provenance(
         lines += [
             "",
             ("This document has no `extra.agent_session_bridge.provenance`, so it was not "
-            "produced by Agent Session Bridge or carries no ASB provenance."),
+            "produced by Trajectory Fidelity Bridge or carries no TFB provenance."),
         ]
     lines.append("")
 
@@ -548,7 +548,7 @@ def _limits(trajectory: Trajectory, fidelity: dict[str, Any] | None) -> list[str
             elif category == "text_bearing":
                 line += (
                     " These types carry text fields (for example context supplied to the "
-                    "model, echoed prompts, or hook output). ASB does not convert them and "
+                    "model, echoed prompts, or hook output). TFB does not convert them and "
                     "cannot show they held nothing that mattered."
                 )
             else:
