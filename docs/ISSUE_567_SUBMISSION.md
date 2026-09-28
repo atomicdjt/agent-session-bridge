@@ -2,7 +2,7 @@
 
 > Historical submission draft, updated after the v0.2 ATIF migration. The current implementation is ATIF-based; this document retains the tested Antigravity boundary evidence.
 
-Hi everyone — building on the provenance/fail-closed discussion above, I built and adversarially tested a reference implementation for the **external side** of this request: [Agent Session Bridge](https://github.com/atomicdjt/agent-session-bridge).
+Hi everyone — building on the provenance/fail-closed discussion above, I built and adversarially tested a reference implementation for the **external side** of this request: [Trajectory Fidelity Bridge](https://github.com/atomicdjt/agent-session-bridge).
 
 It currently provides:
 
