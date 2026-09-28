@@ -24,11 +24,11 @@ def import_session(args: argparse.Namespace) -> None:
     if args.report:
         bridge = (trajectory.extra or {}).get("agent_session_bridge")
         if not isinstance(bridge, dict):
-            raise RuntimeError("ATIF trajectory is missing ASB conversion metadata.")
+            raise RuntimeError("ATIF trajectory is missing TFB conversion metadata.")
         fidelity = bridge.get("fidelity")
         if not isinstance(fidelity, dict):
-            raise RuntimeError("ATIF trajectory is missing an ASB fidelity report.")
-        print("\n--- ASB Fidelity Report ---", file=sys.stderr)
+            raise RuntimeError("ATIF trajectory is missing an TFB fidelity report.")
+        print("\n--- TFB Fidelity Report ---", file=sys.stderr)
         print(
             f"Source records preserved: {fidelity['source_records_preserved']}",
             file=sys.stderr,
@@ -74,14 +74,14 @@ def convert_session(args: argparse.Namespace) -> None:
     exported = export_with_report(trajectory)
     if exported.omitted_system_messages:
         print(
-            "ASB target-mapping warning: omitted "
+            "TFB target-mapping warning: omitted "
             f"{exported.omitted_system_messages} system message(s) because the observed "
             "Antigravity derived-log shape has no evidenced system-message mapping.",
             file=sys.stderr,
         )
     if exported.omitted_content_parts:
         print(
-            "ASB target-mapping warning: omitted "
+            "TFB target-mapping warning: omitted "
             f"{exported.omitted_content_parts} non-text content part(s) because the observed "
             "Antigravity derived-log shape only supports text content.",
             file=sys.stderr,
@@ -142,7 +142,7 @@ def observe_session(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Agent Session Bridge")
+    parser = argparse.ArgumentParser(description="Trajectory Fidelity Bridge")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     import_parser = subparsers.add_parser(
