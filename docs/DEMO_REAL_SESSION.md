@@ -1,4 +1,4 @@
-# Demonstrating ASB on a real Claude Code session
+# Demonstrating TFB on a real Claude Code session
 
 This is a private, reproducible procedure for turning a real Claude Code session into three things: an ATIF trajectory, a human-readable report, and an accounting of what the conversion could not preserve. It is built so that the raw session log stays private, and so that nothing is added to a public repository without a manual privacy review.
 
@@ -95,7 +95,7 @@ Only after that review should a candidate be copied into a fixtures directory by
 
 ## Reading the report
 
-- **Summary and Timeline.** One heading per ATIF step. A step that holds only a thinking block appears as empty, and says which API response it shares with other steps: Claude Code writes one record per content block, and ASB converts each to its own step. Merging them is not implemented.
+- **Summary and Timeline.** One heading per ATIF step. A step that holds only a thinking block appears as empty, and says which API response it shares with other steps: Claude Code writes one record per content block, and TFB converts each to its own step. Merging them is not implemented.
 - **Provenance.** "Recorded in the ATIF document" is what the document itself carries. "Supplied by the manifest" is shown only when you pass `--manifest` and is labelled unverified. "Not available" lists what nobody supplied. Nothing is inferred.
 - **What this conversion could not preserve.** Derived only from the fidelity counters. Records are grouped as session metadata (no text-bearing field observed), records that may hold content (for example `attachment`), and unrecognized. A consistency check compares the counters with what the document actually contains.
 
@@ -103,8 +103,8 @@ Only after that review should a candidate be copied into a fixtures directory by
 
 - The report describes the conversion of the **sanitized** file. The equivalence check compares its fidelity counters and step structure with the raw log's, but text differs by pseudonyms, path substitution, and dropped thinking text.
 - The record categories come from field names seen in Claude Code 2.1.x logs on one machine. They are an observation, not a specification, and a new Claude Code version may write record types that show up as `unrecognized`.
-- Token metrics follow ATIF v1.7: `prompt_tokens` includes cached tokens. Claude Code's `input_tokens` excludes cache reads and cache creation (in the logs inspected it was 2 while cache reads were in the tens of thousands), so ASB adds them back. Cost is never computed.
-- One API response spans several records, and ASB gives each its own step, so step counts are higher than the number of model responses. Usage is attached once per response.
+- Token metrics follow ATIF v1.7: `prompt_tokens` includes cached tokens. Claude Code's `input_tokens` excludes cache reads and cache creation (in the logs inspected it was 2 while cache reads were in the tens of thousands), so TFB adds them back. Cost is never computed.
+- One API response spans several records, and TFB gives each its own step, so step counts are higher than the number of model responses. Usage is attached once per response.
 - The sandbox path replacement handles the spellings a Windows session leaves (`C:\...`, `C:/...`, `/c/...`). Other environments may need `path_variants_for` extended.
-- ASB's redaction is a heuristic and does not remove home-directory paths from tool text. The sanitizer does not rely on it.
+- TFB's redaction is a heuristic and does not remove home-directory paths from tool text. The sanitizer does not rely on it.
 - A demonstration on one controlled session is an example, not evidence of general compatibility.
